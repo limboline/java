@@ -1,0 +1,1496 @@
+# Java复习
+
+## 1、JavaSE
+
+#### <span style='color:red'>1）HashMap</span>
+
+Node[] table的初始化长度length(默认值是16)，
+
+Load factor为负载因子(默认值是0.75)，
+
+threshold是HashMap所能容纳的最大数据量的Node(键值对)个数。threshold = length * Load factor。也就是说，在数组定义好长度之后，负载因子越大，所能容纳的键值对个数越多。
+
+![HashMap如何确定元素位置](https://img-blog.csdnimg.cn/20181102214046362.png)
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2019072810592539.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNTc0NTcx,size_16,color_FFFFFF,t_70)
+
+**1.7和1.8的区别**
+
+1. jdk1.7底层采用entry数组+链表的数据结构，而1.8采用node数组+链表/红黑树的数据结构。
+
+2. jdk1.7的HashMap插入新值时使用头插法，1.8使用尾插法。
+
+   使用头插法比较快，但在多线程扩容时会引起倒序和闭环的问题。所以1.8就采用了尾插法。
+
+3. 扩容后新表中的索引位置计算方式不同，jdk1.7扩容时是将旧表元素的所有数据重新进行哈希计算，即hashCode & (length-1)。而1.8中扩容时只需将hashCode和老数组长度做与运算判断是0还是1，是0的话索引不变，是1的话索引变为老索引位置+老数组长度。
+
+**扩容为什么是2的n次方**
+
+1. 插入新元素确定索引位置的时候是采用key的hashCode和数组长度做与运算，即hashCode&(length-1)。模拟的是取模运算，但速度比取模快很多，要保证这种运算的正确性，必须要求数组的长度是2的n次方。
+
+2. 在扩容时进行新索引位置的计算时也要求数组长度是2的n次方。
+
+#### <span style='color:red'>2）内部类（代填）</span>
+
+|                            |            成员内部类            |         静态内部类         |    局部内部类    |    匿名内部类    |
+| :------------------------- | :------------------------------: | :------------------------: | :--------------: | :--------------: |
+| 外部类访问内部类（静态）   |            不能有静态            |    new Inner().method()    |    不能有静态    |    不能有静态    |
+| 外部类访问内部类（非静态） |      需要new一个内部类对象       |       Inner.method()       |     不能访问     |     不能访问     |
+| 内部类访问外部类（静态）   |             随意访问             |        只能访问静态        |     随意访问     |     随意访问     |
+| 内部类访问外部类（非静态） |             随意访问             |          不能访问          | 不用final了(1.8) | 不用final了(1.8) |
+| 外界访问内部类（静态）     |            不能有静态            |    Outer.Inner.method()    |     访问方法     |     访问方法     |
+| 外界访问内部类（非静态）   | new Outer().new Inner().method() | new Outer().Inner.method() |     访问方法     |     访问方法     |
+
+#### <span style='color:red'>3）多态、重载、重写</span>
+
+多态（狭义上的）：同一个方法对不同的对象调用行为不同的现象。
+
+重写：同一方法在不同类中的重新实现。
+
+重载：方法名必须是一样的，可以参数类型，参数个数，参数顺序不一致。
+
+#### <span style='color:red'>4）Object的常用方法</span>
+
+1. public boolean **equals**(java.lang.Object) 比较内容
+
+2. public native int **hashCode**() 哈希码
+
+3. public java.lang.String **toString**() 变成字符串
+
+4. public final native java.lang.Class **getClass**() 获取类结构信息
+
+5. protected void **finalize**() throws java.lang.Throwable 垃圾回收前执行的方法
+
+6. protected native Object **clone**() throws java.lang.CloneNotSupportedException 克隆
+
+7. public final void **wait**() throws java.lang.InterruptedException 多线程中等待功能
+
+8. public final native void **notify**() 多线程中唤醒功能
+
+9. public final native void **notifyAll**() 多线程中唤醒所有等待线程的功能
+
+**其中clone方法是浅拷贝，要实现深拷贝需要对该类重写clone方法，首先继承Cloneable接口然后重写clone方法为super.clone()**
+
+但是该方法也不是彻底的深拷贝，彻底的深拷贝不存在，只能对要实现深拷贝的类重写clone方法。
+
+![img](https://img-blog.csdn.net/20140119225541718?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvemhhbmdqZ19ibG9n/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+#### <span style='color:red'>5）权限修饰符</span>
+
+|                  |  public  | protected |   默认   | private  |
+| ---------------- | :------: | :-------: | :------: | :------: |
+| 同一类中成员     | 可以访问 | 可以访问  | 可以访问 | 可以访问 |
+| 同一包中其他成员 | 可以访问 | 可以访问  | 可以访问 |          |
+| 不同包中的子类   | 可以访问 | 可以访问  |          |          |
+| 不同包中非子类   | 可以访问 |           |          |          |
+
+#### <span style='color:red'>6）异常</span>
+
+![img](https://img.jbzj.com/file_images/article/201910/20191030141258477.jpg?2019930141321)
+
+Throwable类有两个直接子类：
+
+（1）**Exception**：出现的问题是可以被捕获的
+
+（2）**Error**：系统错误，通常由JVM处理
+
+Exception分为两类
+
+（3）**Check异常**: **编译器会检查此类异常**，如果程序中出现此类异常，比如说IOException，必须对该异常进行处理，要么使用try-catch捕获，要么使用throws语句抛出，否则编译不通过。
+
+（4）**Runtime异常**：RuntimeException类极其子类表示JVM在运行期间可能出现的错误。**编译器不会检查此类异常**，并且不要求处理异常，比如用空值对象的引用（NullPointerException）、数组下标越界（ArrayIndexOutBoundException）。此类异常属于不可查异常，一般是由程序逻辑错误引起的，在程序中可以选择捕获处理，也可以不处理。
+
+<span style='color:red'>**常见异常**</span>
+
+**java.lang.NullpointerException(空指针异常)**
+
+ **java.lang.ClassNotFoundException（指定的类不存在）**
+
+**java.lang.IndexOutOfBoundsException（数组下标越界异常）**
+
+**java.lang.IllegalArgumentException（方法的参数错误）**
+
+**java.lang.IllegalAccessException（没有访问权限）**
+
+**java.lang.ArithmeticException（数学运算异常）**
+
+**java.lang.ClassCastException（数据类型转换异常）**
+
+**java.lang.FileNotFoundException（文件未找到异常）**
+
+**java.lang.ArrayStoreException（数组存储异常）**
+
+**java.lang.NoSuchMethodException（方法不存在异常）**
+
+**java.lang.EOFException（文件已结束异常）**
+
+**java.lang.InstantiationException（实例化异常）**
+
+**java.lang.InterruptedException（被中止异常）**
+
+**java.lang.CloneNotSupportedException （不支持克隆异常）**
+
+**java.lang.OutOfMemoryException （内存不足错误）**
+
+**java.lang.NoClassDefFoundException （未找到类定义错误）**
+
+#### <span style='color:red'>7）Arrays的常用方法</span>
+
+**List<T> asList(T... a)**：返回由指定数组构成的**大小固定**的列表，该列表不能使用add和remove方法改变长度
+
+**int binarySearch(Object[] a, Object key)**：使用二分查找元素的索引
+
+**T[] copyOfRange(T[] original, int from, int to)**：复制数组，并且指定开始/结束索引
+
+**T[] copyOf(T[] original, int newLength)**：复制数组，并且指定复制长度
+
+**void fill(Object[] a, Object val)**：使用指定元素填充数组
+
+**void sort(Object[] a)**：对数组排序，需要实现数组元素的Comparable接口
+
+**String toString(Object[] a)**：数组转字符串
+
+#### <span style='color:red'>8）Collections的常用方法</span>
+
+Collections.**sort**(list)						 //对集合进行排序
+
+Collections.**shuffle**(list)					//对集合进行随机排序
+
+Collections.**max**(list)						//获取集合最大值
+
+Collections.**binarySearch**(list2, "Thursday")	//查找集合指定元素，返回元素所在索引 ,若不存在，返回该元素最可能存在的位置索引
+
+Collections.**indexOfSubList**(list2, subList)		//查找子串在集合中首次出现的位置
+
+Collections.**replaceAll**(list2, "Sunday", "tttttt") //替换集合中指定的元素，若元素存在返回true，否则返回false
+
+Collections.**reverse**(list2)				//反转集合中的元素的顺序
+
+Collections.**rotate**(list2, 3)				//集合中的元素向后移动k位置，后面的元素出现在集合开始的位置
+
+Collections.**copy**(list2, list3)			//将集合list3中的元素复制到list2中，并覆盖相应索引位置的元素
+
+Collections.**swap**(list2, 0, 3)			//交换集合中指定元素的位置
+
+Collections.**fill**(list2, "替换")			//替换集合中的所有元素，用对象object
+
+Collections.**nCopies**(5, "哈哈")		//生成一个指定大小与内容的集合
+
+#### <span style='color:red'>9）枚举类</span>
+
+**enum定义后在编译后默认继承了java.lang.Enum类，所以不能继承别的类了**，但是可以实现接口，而不是普通的继承Object类。enum声明类继承了Serializable和Comparable两个接口。**且采用enum声明后，该类会被编译器加上final声明（同String），故该类是无法继承的。**枚举类的内部定义的枚举值就是该类的实例（且必须在第一行定义，当类初始化时，这些枚举值会被实例化）。
+
+#### <span style='color:red'>10）反射</span>
+
+反射就是把Java类中的各个成分映射成一个个的Java对象。即在运行状态中，对于任意一个类，都能够知道这个类的所以属性和方法；对于任意一个对象，都能调用它的任意一个方法和属性。这种动态获取信息及动态调用对象方法的功能叫Java的反射机制。
+
+class对象获取的三种方法：**对象.getClass()**，**类.class**，**Class.forName(包名.类名)**
+
+class.getMethods();							// 获取所有公有方法
+
+class.getDeclaredMethods();			// 获取所有私有方法
+
+class.getMethod("show1", String.class);		// 获取名为show1的方法（输入参数为String）
+
+class..getConstructor().newInstance()；		// 获取构造方法
+
+method.invoke(Object, args)			// 执行Object对象的方法，输入参数为args如果为静态方法，Object可以为null
+
+**动态代理就用到了反射机制**
+
+#### <span style='color:red'>11）TCP/IP和UDP</span>
+
+![img](https://img-blog.csdnimg.cn/20190414223004578.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xlaG82NjY=,size_16,color_FFFFFF,t_70)
+
+![img](https://img-blog.csdnimg.cn/20190414225550112.gif?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xlaG82NjY=,size_16,color_FFFFFF,t_70)
+
+<span style='color:red'>**应用层**</span>
+
+**运行在TCP协议上的协议**：
+**HTTP**（Hypertext Transfer Protocol，超文本传输协议），主要用于普通浏览。
+**HTTPS**（Hypertext Transfer Protocol over Secure Socket Layer, or HTTP over SSL，安全超文本传输协议）,HTTP协议的安全版本。
+**FTP**（File Transfer Protocol，文件传输协议），由名知义，用于文件传输。
+**POP3**（Post Office Protocol, version 3，邮局协议），收邮件用。
+**SMTP**（Simple Mail Transfer Protocol，简单邮件传输协议），用来发送电子邮件。
+**TELNET**（Teletype over the Network，网络电传），通过一个终端（terminal）登陆到网络。
+**SSH**（Secure Shell，用于替代安全性差的TELNET），用于加密安全登陆用。
+**运行在UDP协议上的协议**：
+**BOOTP**（Boot Protocol，启动协议），应用于无盘设备。
+**NTP**（Network Time Protocol，网络时间协议），用于网络同步。
+**DHCP**（Dynamic Host Configuration Protocol，动态主机配置协议），动态配置IP地址。
+**其他**：
+**DNS**（Domain Name Service，域名服务），用于完成地址查找，邮件转发等工作（运行在TCP和UDP协议上）。
+**ECHO**（Echo Protocol，回绕协议），用于查错及测量应答时间（运行在TCP和UDP协议上）。
+**SNMP**（Simple Network Management Protocol，简单网络管理协议），用于网络信息的收集和网络管理。
+**ARP**（Address Resolution Protocol，地址解析协议），用于动态解析以太网硬件的地址。
+
+<span style='color:red'>**传输层**</span>
+
+**UDP**：只提供了基本的错误检测，是一个**无连接**的协议。
+特点：把数据打包，数据大小有限制（64k），不建立连接，速度快，但可靠性低。
+
+**TCP**：提供了完善的错误控制和流量控制，能够确保数据正常传输，是一个**面向连接**的协议。
+特点：建立连接通道，数据大小无限制速度慢，但是可靠性高。由于传输层涉及的东西比较多，比如端口，Socket等。
+
+![img](https://img-blog.csdnimg.cn/20190414224621538.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xlaG82NjY=,size_16,color_FFFFFF,t_70)
+
+1）：建立连接时，客户端发送SYN包（SYN=i）到服务器，并进入到SYN-SEND状态，等待服务器确认
+
+2）：服务器收到SYN包，必须确认客户的SYN（ack=i+1）,同时自己也发送一个SYN包（SYN=k）,即SYN+ACK包，此时服务器进入SYN-RECV状态
+
+3）：客户端收到服务器的SYN+ACK包，向服务器发送确认报ACK（ack=k+1）,此包发送完毕，客户端和服务器进入ESTABLISHED状态，完成三次握手，客户端与服务器开始传送数据。
+
+**有效阻止重复历史连接的初始化**
+
+![img](https://img-blog.csdnimg.cn/20190414224748102.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xlaG82NjY=,size_16,color_FFFFFF,t_70)
+
+第一次挥手：Client发送一个FIN，用来关闭Client到Server的数据传送，Client进入FIN_WAIT_1状态。
+
+第二次挥手：Server收到FIN后，发送一个ACK给Client，确认序号为收到序号+1（与SYN相同，一个FIN占用一个序号），Server进入CLOSE_WAIT状态。
+
+第三次挥手：Server发送一个FIN，用来关闭Server到Client的数据传送，Server进入LAST_ACK状态。
+
+第四次挥手：Client收到FIN后，Client进入TIME_WAIT状态，接着发送一个ACK给Server，确认序号为收到序号+1，Server进入CLOSED状态，完成四次挥手。
+
+<span style='color:red'>**传输层**</span>
+
+IP地址由两部分组成，即网络地址和主机地址，二者是主从关系：
+
+（1）网络号 net-id，它标志主机（或路由器）所连接到的网络，网络地址表示其属于互联网的哪一个网络
+
+（2）主机号 host-id，它标志该主机（或路由器），主机地址表示其属于该网络中的哪一台主机。
+
+![img](https://img-blog.csdnimg.cn/20190414224020477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xlaG82NjY=,size_16,color_FFFFFF,t_70)
+
+#### <span style='color:red'>12）HTTP和HTTPS</span>
+
+![img](https://pic4.zhimg.com/80/v2-fbef2c48d13068978904f3d1688728ab_720w.jpg)
+
+<img src="https://pic002.cnblogs.com/images/2012/426620/2012072810301161.png" alt="img" style="zoom: 80%;" /><img src="https://images2018.cnblogs.com/blog/867021/201803/867021-20180322001744323-654009411.jpg" alt="img" style="zoom:80%;" />
+
+**状态码**：
+
+1xx：表示服务器已接收了客户端请求，客户端可继续发送请求;
+
+2xx：表示服务器已成功接收到请求并进行处理;
+
+3xx：表示服务器要求客户端重定向;
+
+4xx：表示客户端的请求有非法内容;
+
+5xx：表示服务器未能正常处理客户端的请求而出现意外错误;
+
+**请求头部**：
+
+| Header              | 解释                                                         | 示例                                                    |
+| :------------------ | :----------------------------------------------------------- | :------------------------------------------------------ |
+| **Accept**          | 指定客户端能够接收的内容类型                                 | Accept: text/plain, text/html                           |
+| Accept-Charset      | 浏览器可以接受的字符编码集。                                 | Accept-Charset: iso-8859-5                              |
+| **Accept-Encoding** | 指定浏览器可以支持的web服务器返回内容压缩编码类型。          | Accept-Encoding: compress, gzip                         |
+| **Accept-Language** | 浏览器可接受的语言                                           | Accept-Language: en,zh                                  |
+| Accept-Ranges       | 可以请求网页实体的一个或者多个子范围字段                     | Accept-Ranges: bytes                                    |
+| Authorization       | HTTP授权的授权证书                                           | Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==       |
+| Cache-Control       | 指定请求和响应遵循的缓存机制                                 | Cache-Control: no-cache                                 |
+| **Connection**      | 表示是否需要持久连接。（HTTP 1.1默认进行持久连接）           | Connection: close                                       |
+| **Cookie**          | HTTP请求发送时，会把保存在该请求域名下的所有cookie值一起发送给web服务器。 | Cookie: $Version=1; Skin=new;                           |
+| Content-Length      | 请求的内容长度                                               | Content-Length: 348                                     |
+| Content-Type        | 请求的与实体对应的MIME信息                                   | Content-Type: application/x-www-form-urlencoded         |
+| **Date**            | 请求发送的日期和时间                                         | Date: Tue, 15 Nov 2010 08:12:31 GMT                     |
+| Expect              | 请求的特定的服务器行为                                       | Expect: 100-continue                                    |
+| From                | 发出请求的用户的Email                                        | From: user@email.com                                    |
+| **Host**            | 指定请求的服务器的域名和端口号                               | Host: www.zcmhi.com                                     |
+| If-Match            | 只有请求内容与实体相匹配才有效                               | If-Match: “737060cd8c284d8af7ad3082f209582d”            |
+| If-Modified-Since   | 如果请求的部分在指定时间之后被修改则请求成功，未被修改则返回304代码 | If-Modified-Since: Sat, 29 Oct 2010 19:43:31 GMT        |
+| If-None-Match       | 如果内容未改变返回304代码，参数为服务器先前发送的Etag，与服务器回应的Etag比较判断是否改变 | If-None-Match: “737060cd8c284d8af7ad3082f209582d”       |
+| If-Range            | 如果实体未改变，服务器发送客户端丢失的部分，否则发送整个实体。参数也为Etag | If-Range: “737060cd8c284d8af7ad3082f209582d”            |
+| If-Unmodified-Since | 只在实体在指定时间之后未被修改才请求成功                     | If-Unmodified-Since: Sat, 29 Oct 2010 19:43:31 GMT      |
+| Max-Forwards        | 限制信息通过代理和网关传送的时间                             | Max-Forwards: 10                                        |
+| Pragma              | 用来包含实现特定的指令                                       | Pragma: no-cache                                        |
+| Proxy-Authorization | 连接到代理的授权证书                                         | Proxy-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ== |
+| Range               | 只请求实体的一部分，指定范围                                 | Range: bytes=500-999                                    |
+| Referer             | 先前网页的地址，当前请求网页紧随其后,即来路                  | Referer: http://www.zcmhi.com/archives/71.html          |
+| TE                  | 客户端愿意接受的传输编码，并通知服务器接受接受尾加头信息     | TE: trailers,deflate;q=0.5                              |
+| Upgrade             | 向服务器指定某种传输协议以便服务器进行转换（如果支持）       | Upgrade: HTTP/2.0, SHTTP/1.3, IRC/6.9, RTA/x11          |
+| User-Agent          | User-Agent的内容包含发出请求的用户信息                       | User-Agent: Mozilla/5.0 (Linux; X11)                    |
+| Via                 | 通知中间网关或代理服务器地址，通信协议                       | Via: 1.0 fred, 1.1 nowhere.com (Apache/1.1)             |
+| Warning             | 关于消息实体的警告信息                                       | Warn: 199 Miscellaneous warning                         |
+
+**相应头部**：
+
+| Header               | 解释                                                         | 示例                                                  |
+| :------------------- | :----------------------------------------------------------- | :---------------------------------------------------- |
+| Accept-Ranges        | 表明服务器是否支持指定范围请求及哪种类型的分段请求           | Accept-Ranges: bytes                                  |
+| Age                  | 从原始服务器到代理缓存形成的估算时间（以秒计，非负）         | Age: 12                                               |
+| Allow                | 对某网络资源的有效的请求行为，不允许则返回405                | Allow: GET, HEAD                                      |
+| **Cache-Control**    | 告诉所有的缓存机制是否可以缓存及哪种类型                     | Cache-Control: no-cache                               |
+| **Content-Encoding** | web服务器支持的返回内容压缩编码类型。                        | Content-Encoding: gzip                                |
+| Content-Language     | 响应体的语言                                                 | Content-Language: en,zh                               |
+| **Content-Length**   | 响应体的长度                                                 | Content-Length: 348                                   |
+| Content-Location     | 请求资源可替代的备用的另一地址                               | Content-Location: /index.htm                          |
+| Content-MD5          | 返回资源的MD5校验值                                          | Content-MD5: Q2hlY2sgSW50ZWdyaXR5IQ==                 |
+| Content-Range        | 在整个返回体中本部分的字节位置                               | Content-Range: bytes 21010-47021/47022                |
+| **Content-Type**     | 返回内容的MIME类型                                           | Content-Type: text/html; charset=utf-8                |
+| **Date**             | 原始服务器消息发出的时间                                     | Date: Tue, 15 Nov 2010 08:12:31 GMT                   |
+| ETag                 | 请求变量的实体标签的当前值                                   | ETag: “737060cd8c284d8af7ad3082f209582d”              |
+| **Expires**          | 响应过期的日期和时间                                         | Expires: Thu, 01 Dec 2010 16:00:00 GMT                |
+| Last-Modified        | 请求资源的最后修改时间                                       | Last-Modified: Tue, 15 Nov 2010 12:45:26 GMT          |
+| Location             | 用来重定向接收方到非请求URL的位置来完成请求或标识新的资源    | Location: http://www.zcmhi.com/archives/94.html       |
+| **Pragma**           | 包括实现特定的指令，它可应用到响应链上的任何接收方           | Pragma: no-cache                                      |
+| Proxy-Authenticate   | 它指出认证方案和可应用到代理的该URL上的参数                  | Proxy-Authenticate: Basic                             |
+| refresh              | 应用于重定向或一个新的资源被创造，在5秒之后重定向（由网景提出，被大部分浏览器支持） | Refresh: 5; url=http://www.zcmhi.com/archives/94.html |
+| Retry-After          | 如果实体暂时不可取，通知客户端在指定时间之后再次尝试         | Retry-After: 120                                      |
+| Server               | web服务器软件名称                                            | Server: Apache/1.3.27 (Unix) (Red-Hat/Linux)          |
+| Set-Cookie           | 设置Http Cookie                                              | Set-Cookie: UserID=JohnDoe; Max-Age=3600; Version=1   |
+| Trailer              | 指出头域在分块传输编码的尾部存在                             | Trailer: Max-Forwards                                 |
+| Transfer-Encoding    | 文件传输编码                                                 | Transfer-Encoding:chunked                             |
+| **Vary**             | 告诉下游代理是使用缓存响应还是从原始服务器请求               | Vary: *                                               |
+| Via                  | 告知代理客户端响应是通过哪里发送的                           | Via: 1.0 fred, 1.1 nowhere.com (Apache/1.1)           |
+| Warning              | 警告实体可能存在的问题                                       | Warning: 199 Miscellaneous warning                    |
+| WWW-Authenticate     | 表明客户端请求实体应该使用的授权方案                         | WWW-Authenticate: Basic                               |
+
+http请求方法
+
+| 序号 | 方法    | 描述                                                         |
+| ---- | ------- | ------------------------------------------------------------ |
+| 1    | GET     | 发送请求来获得服务器上的资源，请求体中不会包含请求数据，请求数据放在协议头中。另外get支持快取、缓存、可保留书签等。幂等 |
+| 2    | POST    | 和get一样很常见，向服务器提交资源让服务器处理，比如提交表单、上传文件等，可能导致建立新的资源或者对原有资源的修改。提交的资源放在请求体中。不支持快取。非幂等 |
+| 3    | HEAD    | 本质和get一样，但是**响应中没有呈现数据，而是http的头信息**，主要用来检查资源或超链接的有效性或是否可以可达、检查网页是否被串改或更新，获取头信息等，特别适用在有限的速度和带宽下。 |
+| 4    | PUT     | 和post类似，html表单不支持，发送资源与服务器，并存储在服务器指定位置，要求客户端事先知道该位置；比如post是在一个集合上（/province），而**put是具体某一个资源上**（/province/123）。所以put是安全的，无论请求多少次，都是在123上更改，而post可能请求几次创建了几次资源。幂等 |
+| 5    | DELETE  | 请求服务器删除某资源。和put都具有破坏性，可能被防火墙拦截。如果是https协议，则无需担心。幂等 |
+| 6    | CONNECT | HTTP/1.1协议中预留给能够将连接改为管道方式的代理服务器。就是把服务器作为跳板，去访问其他网页然后把数据返回回来，连接成功后，就可以正常的get、post了。 |
+| 7    | OPTIONS | 获取http服务器支持的http请求方法，允许客户端查看服务器的性能，比如ajax跨域时的预检等。 |
+| 8    | TRACE   | 回显服务器收到的请求，主要用于测试或诊断。一般禁用，防止被恶意攻击或盗取信息。 |
+
+**基于 请求-响应 的模式**
+
+HTTP协议规定,请求从客户端发出,最后服务器端响应该请求并 返回。换句话说,肯定是先从客户端开始建立通信的,服务器端在没有 接收到请求之前不会发送响应
+
+**无状态保存**
+
+HTTP是一种不保存状态,即无状态(stateless)协议。HTTP协议 自身不对请求和响应之间的通信状态进行保存。也就是说在HTTP这个 级别,协议对于发送过的请求或响应都不做持久化处理。
+
+使用HTTP协议,每当有新的请求发送时,就会有对应的新响应产 生。**协议本身并不保留之前一切的请求或响应报文的信息**。**这是为了更快地处理大量事务,确保协议的可伸缩性**,而特意把HTTP协议设计成 如此简单的。可是,随着Web的不断发展,因无状态而导致业务处理变得棘手 的情况增多了。比如,用户登录到一家购物网站,即使他跳转到该站的 其他页面后,也需要能继续保持登录状态。针对这个实例,网站为了能 够掌握是谁送出的请求,需要保存用户的状态。**HTTP/1.1虽然是无状态协议,但为了实现期望的保持状态功能, 于是引入了Cookie技术**。有了Cookie再用HTTP协议通信,就可以管理状态了。
+
+**无连接**
+
+无连接的含义是限制每次连接只处理一个请求。**服务器处理完客户的请求，并收到客户的应答后，即断开连接**。采用这种方式可以节省传输时间，并且可以提高并发性能，不能和每个用户建立长久的连接，请求一次相应一次，服务端和客户端就中断了。但是无连接有两种方式，早期的http协议是一个请求一个响应之后，直接就断开了，**但是现在的http协议1.1版本不是直接就断开了，而是等几秒钟**，这几秒钟是等什么呢，等着用户有后续的操作，如果用户在这几秒钟之内有新的请求，那么还是通过之前的连接通道来收发消息，如果过了这几秒钟用户没有发送新的请求，那么就会断开连接，这样可以提高效率，减少短时间内建立连接的次数，因为建立连接也是耗时的，默认的好像是3秒，但是这个时间是可以通过咱们后端的代码来调整的，自己网站根据自己网站用户的行为来分析统计出一个最优的等待时间。
+
+#### <span style='color:red'>13）流式编程</span>
+
+**Stream**的操作符大体上分为两种：**中间操作符**和**终止操作符**
+
+中间操作符包含8种(排除了parallel,sequential,这两个操作并不涉及到对数据流的加工操作)：
+
+1. **map**(mapToInt,mapToLong,mapToDouble) 转换操作符，把比如A->B，这里默认提供了转int，long，double的操作符。
+
+2. **flatmap**(flatmapToInt,flatmapToLong,flatmapToDouble) 拍平操作比如把 int[]{2,3,4} 拍平 变成 2，3，4 也就是从原来的一个数据变成了3个数据，这里默认提供了拍平成int,long,double的操作符。
+
+3. **limit** 限流操作，比如数据流中有10个 我只要出前3个就可以使用。
+4. **distint** 去重操作，对重复元素去重，底层使用了equals方法。
+5. **filter** 过滤操作，把不想要的数据过滤。
+6. **peek** 挑出操作，如果想对数据进行某些操作，如：读取、编辑修改等。**（Consumer接口，没有输出，map是Function接口）**
+7. **skip** 跳过操作，跳过某些元素。**（前n个元素）**
+8. **sorted**(unordered) 排序操作，对元素排序，前提是实现Comparable接口，当然也可以自定义比较器。
+
+终止操作符就是用来对数据进行收集或者消费的，**数据到了终止操作这里就不会向下流动了**，**终止操作符只能使用一次**。
+
+1. **collect** 收集操作，将所有数据收集起来，这个操作非常重要，官方的提供的Collectors 提供了非常多收集器，可以说Stream 的核心在于Collectors。
+2. **count** 统计操作，统计最终的数据个数。
+3. **findFirst**、**findAny** 查找操作，查找第一个、查找任何一个 返回的类型为Optional。
+4. **noneMatch**、**allMatch**、**anyMatch** 匹配操作，数据流中是否存在符合条件的元素 返回值为bool 值。
+5. **min**、**max** 最值操作，需要自定义比较器，返回数据流中最大最小的值。
+6. **reduce** 规约操作，将整个数据流的值规约为一个值，count、min、max底层就是使用reduce。
+7. **forEach**、**forEachOrdered** 遍历操作，这里就是对最终的数据进行消费了。
+8. **toArray** 数组操作，将数据流的元素转换成数组。
+
+**foreach不止是stream的操作符也可以用于各种集合，流式编程主要看实现的接口类型，有输出的才会改变流内部的数据**
+
+#### <span style='color:red'>14）JDK8新特性</span>
+
+lambda表达式
+
+方法引用（：：）
+
+函数式接口
+
+默认方法（接口中可以用default 修饰的方法，该方法可以写实现；接口内可以实现静态方法）
+
+stream
+
+新增Optional类
+
+java.time（解决java.util.Date的问题）
+
+#### <span style='color:red'>n）杂七杂八的</span>
+
+**StringBuffer和StringBuilder**
+
+**Vector**
+
+**TreeSet**
+
+**字符流、字节流、缓冲流**
+
+**序列化**
+
+**枚举（单例）**
+
+**EnumMap、EnumSet**
+
+**socket**
+
+**ssl**
+
+## 2、JUC
+
+#### <span style='color:red'>1）什么是JUC</span>
+
+​		JUC就是java.util.concurrent包，俗称java并发包
+
+#### <span style='color:red'>2）线程和进程</span>
+
+​		进程是**操作系统**资源分配的基本单位，而线程是**处理器**任务调度和执行的基本单位。
+
+#### <span style='color:red'>3）并发和并行</span>
+
+​		并发(concurrent)指的是多个程序可以同时运行的现象，更细化的是多进程可以同时运行或者多指令可以同时运行。**当程序中写下多进程或多线程代码时，这意味着的是并发而不是并行**。并发是因为多进程/多线程都是需要去完成的任务，不并行是因为并行与否由操作系统的调度器决定，可能会让多个进程/线程被调度到同一个CPU核心上。只不过调度算法会尽量让不同进程/线程使用不同的CPU核心，所以在实际使用中几乎总是会并行，但却不能以100%的角度去保证会并行。也就是说，**并行与否程序员无法控制，只能让操作系统决定**。
+
+#### <span style='color:red'>4）java实现多线程的三种方式</span>
+
+​		继承 Thread 类，实现 Runnable 接口，使用Callable和Future接口创建线程。
+
+``` java
+Callable<Integer> myCallable = new MyCallable();    // 创建MyCallable对象
+FutureTask<Integer> ft = new FutureTask<Integer>(myCallable); //使用FutureTask来包装MyCallable对象
+Thread thread = new Thread(ft);   //FutureTask对象作为Thread对象的target创建新的线程
+thread.start();                      //线程进入到就绪状态
+System.out.println("线程返回值：" + ft.get());
+//……
+
+
+class MyCallable implements Callable<Integer> {
+    // 与run()方法不同的是，call()方法具有返回值
+    @Override
+    public Integer call() {
+        /*****重写call方法*****/
+    }
+}
+```
+
+​		**注意：**用for循环多次new Thread(同一个实现Runable的类的实例)，就是多次操作该实例，**但是**FutureTask只能执行一次call方法（写死在该类的run方法里面，执行一次call方法后ft状态发生改变）
+
+#### <span style='color:red'>5）java多线程的几种状态</span>
+
+1. **初始(NEW)**：新创建了一个线程对象，但还没有调用start()方法。
+
+2. **运行(RUNNABLE)**：Java线程中将就绪（ready）和运行中（running）两种状态笼统的称为“运行”。
+
+   线程对象创建后，其他线程(比如main线程）调用了该对象的start()方法。该状态的线程位于可运行线程池中，等待被线程调度选中，获取CPU的使用权，此时处于就绪状态（ready）。就绪状态的线程在获得CPU时间片后变为运行中状态（running）。
+
+3. **阻塞(BLOCKED)**：表示线程阻塞于锁。
+
+4. **等待(WAITING)**：进入该状态的线程需要等待其他线程做出一些特定动作（通知或中断）。
+
+5. **超时等待(TIMED_WAITING)**：该状态不同于WAITING，它可以在指定的时间后自行返回。
+
+6. **终止(TERMINATED)**：表示该线程已经执行完毕。
+
+![线程状态图](https://img-blog.csdnimg.cn/20181120173640764.jpeg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3BhbmdlMTk5MQ==,size_16,color_FFFFFF,t_70)
+
+
+
+#### <span style='color:red'>6）synchronized的用法</span>
+
+1. synchronized**方法**锁定的是当前对象，并且当前对象的其他synchronized方法均被锁定，其他不含synchronized方法不进行锁定
+2. synchronized**代码块**锁定的是（）里面的对象（**即使该对象所属实例也被锁，依旧不会互相影响**），对于其他带有相同synchronized对象的代码块进行锁定，其他不带有synchronized的代码不进行锁定（**即使我们操作该对象，但是没有使用synchronized关键字，也不进行锁定**）
+3. synchronize静态方法和synchronized非静态方法之间不互斥，锁定的静态方法是类锁，同类之间的静态方法互斥
+4. synchronized静态代码块类比非静态代码块和静态方法
+5. 对象锁之间互斥、类锁之间互斥（**锁方法和所代码块相同**）
+
+#### <span style='color:red'>7）Synchronized和Lock的区别</span>
+
+1. Synchronized是内置的java关键字，Lock是java的一个类
+2. Synchronized无法判断锁的状态，Lock可以判断是否获取到了锁
+3. Synchronized会自动释放锁，Lock必须要手动释放锁，**如果不释放锁，死锁**
+4. Synchronized线程1（获得锁、阻塞），线程2（等待），Lock锁不一定会等下去
+5. Synchronized可重入，不可以中断，非公平，Lock可重入，可以判断锁，可以自己设置公平非公平
+6. Synchronized适合锁少量的代码同步问题，Lock适合锁大量的同步代码
+
+#### <span style='color:red'>8）CyclicBarrier和CountDownLatch的区别</span>
+
+![img](https://javadoop.com/blogimages/AbstractQueuedSynchronizer-3/cyclicbarrier-3.png)
+
+1. countDownLatch是一个计数器，线程完成一个记录一个，计数器递减，只能只用一次
+2. CyclicBarrier的计数器更像一个阀门，需要所有线程都到达，然后继续执行，计数器递增，提供reset功能，可以多次使用
+
+#### <span style='color:red'>9）semaphore</span>
+
+​		Semaphore也是一个线程同步的辅助类，可以维护当前访问自身的线程个数，并提供了同步机制。使用Semaphore可以控制同时访问资源的线程个数，例如，实现一个文件允许的并发访问数。
+
+Semaphore的主要方法摘要：
+
+　　void acquire()：从此信号量获取一个许可，在提供一个许可前一直将线程阻塞，否则线程被中断。
+
+　　void release()：释放一个许可，将其返回给信号量。
+
+　　int availablePermits()：返回此信号量中当前可用的许可数。
+
+　　boolean hasQueuedThreads()：查询是否有线程正在等待获取。
+
+#### <span style='color:red'>10）读写锁（ReadWriteLock）</span>
+
+读读共享、读写互斥、写读互斥、写写互斥。
+
+**独占锁**：一次只能有一个线程占有。（写锁）
+
+**共享锁**：多个线程可以同时占有。（读锁）
+
+#### <span style='color:red'>11）阻塞队列</span>
+
+BlockingQueue是Queue的一个子接口
+
+| 方式         | 抛出异常 | 有返回值，不抛出异常 | 等待超时            | 阻塞等待(BlockingQueue独有) |
+| ------------ | -------- | -------------------- | ------------------- | --------------------------- |
+| 添加         | add      | offer                | offer（加超时参数） | put                         |
+| 移除         | remove   | poll                 | poll（加超时参数）  | take                        |
+| 检查队首元素 | element  | peek                 | ----                | ----                        |
+
+SynchronousQueue是BlockingQueue的实现，相当于只有一个容量的队列（**执行完put后线程阻塞，知道被take**）
+
+#### <span style='color:red'>12）线程池</span>
+
+**注意**：
+
+​		线程池不允许使用Executors去创建，而是通过ThreadPoolExcutor的方式，这样的处理方式能更加明确线程池的运行规则，规避资源耗尽的风险。
+
+​		FixedThreadPool和SingleThreadPool允许的请求队列长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM；
+
+​		CacheThreadPool和ScheduledThreadPool允许创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。
+
+**好处**：
+
+1. 降低资源的消耗（**线程复用**）
+2. 提高相应的速度（**控制最大并发数**）
+3. 方便管理（**管理线程**）
+
+**三大方法**：
+
+```java
+Executors.newSingleThreadExecutor();	// 单个线程
+Executors.newFixedThreadPool(5);  		// 固定线程数（5）
+Executors.newCachedThreadPool();        // 可伸缩
+```
+
+**七种参数**：
+
+```java
+public ThreadPoolExecutor(int corePoolSize,			// 核心线程池大小
+                          int maximumPoolSize,		// 最大核心线程池大小
+                          long keepAliveTime,		// 超时了多久，没有人调用就会释放
+                          TimeUnit unit,			// 超时单位
+                          BlockingQueue<Runnable> workQueue,  // 阻塞队列
+                          ThreadFactory threadFactory,		  // 线程工厂，创建线程的，一般不用动的
+                          RejectedExecutionHandler handler)	  // 拒绝策略
+```
+
+**四种拒绝策略**：
+
+``` java
+ThreadPoolExecutor.CallerRunsPolicy()		// 由调用线程处理该任务(例如在main里开线程，main执行)
+ThreadPoolExecutor.AbortPolicy()			// 丢弃任务，并抛出RejectedExecutionException异常（默认）
+ThreadPoolExecutor.DiscardPolicy ()			// 丢弃任务，但是不抛出异常
+ThreadPoolExecutor.DiscardOldestPolicy()	// 丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
+```
+
+**最大线程池数量选择**：
+
+​		根据程序占用资源情况分为**CPU密集型**任务（系统运作大部分的状况是CPU Loading 100%，CPU要读/写I/O(硬盘/内存)，I/O在很短的时间就可以完成，而CPU还有许多运算要处理，CPU Loading很高）、**IO密集型**任务（系统运作，大部分的状况是CPU在等I/O (硬盘/内存) 的读/写操作，此时CPU Loading并不高）。
+
+​		CPU密集型需要选择**逻辑处理器的核数**作为最大线程数【Runtime.getRuntime().availableProcessors()】；
+
+​		IO密集型一般选择**最大IO任务数量的两倍**作为最大线程数。
+
+#### <span style='color:red'>13）四大函数式接口</span>
+
+新时达程序员：**lambda表达式**、**链式编程**、**函数式接口**、**Stream流式计算**
+
+四大函数式接口：**Consumer**、**Function**、**Predicate**、**Supplier**
+
+**Function**：Function<String，String> function = s -> s;（apply方法，输入一个参数，输出一个参数）
+
+**Predicate**：Predicate<String> predicate = String::isEmpty;  （test方法，输入一个参数，输出一个布尔值）
+
+**Consumer**：Consumer<String> consumer = System.out::println;  （accept方法，一个输入参数，没有输出）
+
+**Supplier**：Supplier<Integer> supplier = () -> 1024;  （get方法，没有输入，只有一个输出）
+
+#### <span style='color:red'>14）Forkjoin</span>
+
+ForkJoin是由JDK1.7后提供多线并发处理框架，ForkJoin的框架的基本思想是分而治之。使用ForkJoin将相同的计算任务通过多线程的进行执行。从而能提高数据的计算速度。
+
+<span style='color:red'>**构造函数**</span>
+
+```java
+public ForkJoinPool(int parallelism,
+                    ForkJoinWorkerThreadFactory factory,
+                    UncaughtExceptionHandler handler,
+                    boolean asyncMode)
+```
+
+- **parallelism**：可并行级别，**默认构造函数中将改值设为CPU的核数**。Fork/Join框架将依据这个并行级别的设定，决定框架内并行执行的线程数量。并行的每一个任务都会有一个线程进行处理，但是千万不要将这个属性理解成Fork/Join框架中最多存在的线程数量，也不要将这个属性和ThreadPoolExecutor线程池中的corePoolSize、maximumPoolSize属性进行比较，因为ForkJoinPool的组织结构和工作方式与后者完全不一样。Fork/Join框架中可存在的线程数量和这个参数值的关系并不是绝对的关联（有依据但并不全由它决定）。
+- **factory**：当Fork/Join框架创建一个新的线程时，同样会用到线程创建工厂。只不过这个线程工厂不再需要实现ThreadFactory接口，而是需要实现ForkJoinWorkerThreadFactory接口。后者是一个函数式接口，只需要实现一个名叫newThread的方法。在Fork/Join框架中有一个默认的ForkJoinWorkerThreadFactory接口实现：DefaultForkJoinWorkerThreadFactory。
+- **handler**：异常捕获处理器。当执行的任务中出现异常，并从任务中被抛出时，就会被handler捕获。
+- **asyncMode**：这个参数也非常重要，从字面意思来看是指的异步模式，它并不是说Fork/Join框架是采用同步模式还是采用异步模式工作。Fork/Join框架中为每一个独立工作的线程准备了对应的待执行任务队列，这个任务队列是使用数组进行组合的双向队列。即是说存在于队列中的待执行任务，**即可以使用先进先出的工作模式，也可以使用后进先出的工作模式。默认为false，即LIFO模式。**
+
+如果你对Fork/Join框架没有特定的执行要求，可以直接使用不带有任何参数的构造函数。也就是说**推荐基于当前操作系统可以使用的CPU内核数作为Fork/Join框架内最大并行任务数量**，这样可以保证CPU在处理并行任务时，尽量少发生任务线程间的运行状态切换。
+
+<span style='color:red'>**Fork方法和Join方法**</span>
+
+Fork/Join框架中提供的fork方法和join方法，可以说是该框架中提供的最重要的两个方法，它们和parallelism“可并行任务数量”配合工作，可以导致拆分的子任务T1.1、T1.2甚至TX在Fork/Join框架中不同的运行效果。
+
+**fork方法用于将新创建的子任务放入当前线程的work queue队列中**，Fork/Join框架将根据当前正在并发执行ForkJoinTask任务的ForkJoinWorkerThread线程状态，决定是让这个任务在队列中等待，还是创建一个新的ForkJoinWorkerThread线程运行它，又或者是唤起其它正在等待任务的ForkJoinWorkerThread线程运行它。
+
+ForkJoinTask任务是一种能在Fork/Join框架中运行的特定任务，也只有这种类型的任务可以在Fork/Join框架中被拆分运行和合并运行。ForkJoinWorkerThread线程是一种在Fork/Join框架中运行的特性线程，它除了具有普通线程的特性外，最主要的特点是**每一个ForkJoinWorkerThread线程都具有一个独立的任务等待队列（work queue）**，这个任务队列用于存储在本线程中被拆分的若干子任务。
+
+**join方法用于**让当前线程阻塞，直到对应的子任务完成运行并返回执行结果。或者，如果这个子任务存在于当前线程的任务等待队列（work queue）中，则**取出这个子任务进行“递归”执行**。其目的是尽快得到当前子任务的运行结果，然后继续执行。
+
+<span style='color:red'>**JoinForkPool的三种提交任务的方法**</span>
+
+**execute**(ForkJoinTask) 异步执行tasks，无返回值
+
+**invoke**(ForkJoinTask) 有Join, tasks会被同步到主进程（同步的直接返回结果）
+
+**submit**(ForkJoinTask) 异步执行，且带Task返回值，可通过task.get 实现同步到主线程
+
+**Java SE中有一些通用的功能，它们已经使用fork/join框架来实现。**
+
+1. 在Java 8的java.util.Arrays中的parallelSort方法采用了fork/join框架，在多处理器系统上，并行排序大量数据比顺序排序更快
+
+2. 在Stream.parallel()中使用并行
+
+#### <span style='color:red'>15）CompletableFuture</span>
+
+​		所谓异步调用其实就是实现一个可**无需等待**被调用函数的返回值而让操作继续运行的方法。在 Java 语言中，简单的讲就是另启一个线程来完成调用中的部分计算，使调用继续运行或返回，而不需要等待计算结果。但调用者仍需要取线程的计算结果。
+
+​		JDK5新增了Future接口，用于描述一个异步计算的结果。虽然 Future 以及相关使用方法提供了异步执行任务的能力，但是对于结果的获取却是很不方便，只能通过阻塞或者轮询的方式得到任务的结果。阻塞的方式显然和我们的异步编程的初衷相违背，轮询的方式又会耗费无谓的 CPU 资源，而且也不能及时地得到计算结果。
+
+​		在Java8中，CompletableFuture提供了非常强大的Future的扩展功能，可以帮助我们简化异步编程的复杂性，并且提供了函数式编程的能力，可以通过回调的方式处理计算结果，也提供了转换和组合 CompletableFuture 的方法。
+
+​		它可能代表一个明确完成的Future，也有可能代表一个完成阶段（ CompletionStage ），它支持在计算完成以后触发一些函数或执行某些动作。
+
+#### <span style='color:red'>16）Volatile</span>
+
+Volatile是java虚拟机提供的轻量级的同步机制，
+
+1. 保证可见性
+2. **不保证原子性**
+3. 禁止指令重排（内存屏障）
+
+**<span style='color:red'>JMM</span>**：java内存模型，不存在的东西，概念！
+
+1. 在线程解锁前：必须把共享变量**立刻**刷新回主存
+2. 在线程加锁前：必须读取主存中的最新值到工作内存中
+3. 加锁和解锁是同一把锁
+
+**<span style='color:red'>8种操作</span>**
+
+线程**读取**并**载入**主存数据，线程执行引擎**使用**并**赋值**工作内存，线程**存储**并**写入**主存数据，以及**锁定**和**解锁**
+
+**<span style='color:red'>指令重排</span>**
+
+我们写的程序，计算机并不是按照写的那样去执行。
+
+**源代码** --> **编译器优化的重排** --> **指令并行也可能会重排** --> **内存系统也会重排** --> **执行**
+
+#### <span style='color:red'>17）单例模式</span>
+
+饿汉式：直接创建实例，（浪费内存空间）
+
+懒汉式：需要的时候才创建实例，创建一次后再使用，直接返回即可
+
+``` java
+public class LazyMan(){
+    private LazyMan(){}
+    private volatile static LazyMan LazyMan;
+    // 双重检测锁模式，DCL懒汉式（防止在synchronized的时候，其他线程完成了初始化操作）
+    public static LazyMan getInstance(){
+        if(LazyMan == null){
+            synchronized(LazyMan.class){
+                if(LazyMan == null){
+                    LazyMan = new LazyMan();		// 不是一个原子性操作
+                    // 1.分配内存空间
+                    // 2.执行构造方法，初始化对象
+                    // 3.把这个对象指向这个空间
+                    
+                    // 如果指令重排后线程A执行顺序为132，当线程B进来时，发现LazyMan已经不为null了，就直接返回LazyMan了，						// 但是此时2还未执行，就会出错。所以要加volatile，保证CPU不能进行指令重排
+                }
+            }
+        }
+        return LazyMan;
+    }
+}
+```
+
+可以通过静态内部类创建单例
+
+```java
+public class TestInner {
+    private TestInner(){}
+    public static TestInner getInstance(){
+        return InnerClass.testInner;
+    }
+    public static class InnerClass{
+        private static final TestInner testInner = new TestInner();
+    }
+}
+```
+
+​		**单例模式不安全**，可以通过反射破坏，可以通过使用枚举类来实现单例，**枚举是有参构造**（String s，int i）（代码中是无参构造，但是从class反编译发现有参数），枚举不能通过反射破坏，因为在**反射规则中定义**了，只要反射枚举类就会抛出异常
+
+#### <span style='color:red'>18）CAS</span>
+
+​		CAS：CompareAndSet比较当前工作内存中的值和主内存中的值，如果这个值是期望的，那么则执行操作，如果不是就一直循环。CAS是CPU指令级操作，属于原子性操作，提交，检查，更新/返回是**原子操作**。
+
+​		CAS属于**乐观锁**（不上锁，提交时进行检查）、Synchronized属于**悲观锁**（一个上锁，其他挂起）
+
+<span style='color:red'>**问题：**</span>
+
+1. 循环会耗时
+2. 一次性只能保证一个共享变量的原子性
+3. **ABA问题**（带版本号的原子操作，引入**原子引用**）
+
+#### <span style='color:red'>19）各种锁</span>
+
+**公平锁**：非常公平、不能插队（必须先来后到）
+
+**非公平锁**：非常不公平、可以插队（默认都是非公平锁）
+
+**可重入锁**：也叫递归锁，锁必须配对
+
+**自旋锁**：是指当一个线程在获取锁的时候，如果锁已经被其它线程获取，那么该线程将循环等待，然后不断的判断锁是否能够被成功获取，直到获取到锁才会退出循环。
+
+**死锁**：四个必要条件
+
+（1） 互斥条件：一个资源每次只能被一个进程使用。
+（2） 请求与保持条件：一个进程因请求资源而阻塞时，对已获得的资源保持不放。
+（3） 不剥夺条件：进程已获得的资源，在末使用完之前，不能强行剥夺。
+（4） 循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。
+
+**解决方法**：
+
+1. 使用jps定位进程号：<span style='color:red'>**jps -l**</span>（查看当前或者的进程）
+2. 使用<span style='color:red'>**jstack + 进程号**</span>查看堆栈信息。
+
+#### <span style='color:red'>n）杂七杂八的</span>
+
+**Condition**
+
+**StampedLock**
+
+**Atomic**
+
+**threadlocal**
+
+## 3、JVM
+
+#### <span style='color:red'>1）JVM结构框架</span>
+
+![image-20210112155234907](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112155234907.png)
+
+![image-20210112160308549](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112160308549.png)
+
+![img](https://img-blog.csdnimg.cn/20190216114129109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM3NTI0NjYx,size_16,color_FFFFFF,t_70)
+
+
+
+#### <span style='color:red'>2）类加载器</span>
+
+1. 虚拟机自带的加载器
+2. 启动类（根）加载器
+3. 扩展类加载器
+4. 应用程序加载器
+
+双亲委派机制
+
+![image-20210112163754431](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112163754431.png)
+
+#### <span style='color:red'>3）堆内存在不同jdk版本中的分配</span>
+
+![图 25-1  JDK1.6、JDK1.7、JDK1.8，内存模型演变](https://img-blog.csdnimg.cn/img_convert/d8291591919c226d321f30d983823a3a.png)
+
+#### <span style='color:red'>4）OOM时如何解决问题</span>
+
+1. 尝试扩大堆内存看结果
+2. 分析内存，看一下哪个地方出现了问题（专业工具，**内存快照分析工具，MAT，Jprofiler**）
+
+MAT，Jprofiler作用：
+
+1. 分析Dump内存文件，快速定位内存泄漏；
+2. 获取队中的数据
+3. 获得大的对象
+
+#### <span style='color:red'>5）GC常用算法</span>
+
+主要针对堆内存，堆内存分**新生代（1/3）**和**年老代（2/3）**，新生代又分为三个区域，**Eden（8/10）**、**From Survive（1/10）**、**To Survive（1/10）**。采用**分代收集算法**，分新生代和老年代
+
+首先判断那些对象需要被回收
+
+**引用计数法**和**可达性分析法**
+
+**Minor GC**（复制算法）
+
+JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务，所以无论什么时候，总是有一块 Survivor 区域是空闲着的。因此，**一般新生代可用空间=Eden+from**，新生代实际可用的内存空间为 9/10 ( 即90% )的新生代空间。
+
+初级回收将年轻代分为三个区域, 一个新生代 , 2个大小相同的复活代, 应用程序只能使用一个新生代和一个复活代, 当发生初级垃圾回收的时候,gc挂起程序, **然后将新生代和复活代中的存活对象复制到另外一个非活动的复活代中,然后一次性清除新生代和复活代**，**将原来的非复活代标记成为活动复活代**。将在指定次数回收后仍然存在的对象移动到老年代中，初级回收后，得到一个空的可用的新生代。
+
+**Major GC**（标记清除法和标记整理法）
+
+![https://img-blog.csdn.net/20180813194627489?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTI5OTgyNTQ=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70](https://img-blog.csdn.net/20180813194627489?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTI5OTgyNTQ=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+新生代收集器：Serial、ParNew、Parallel Scavenge；老年代收集器：Serial Old、Parallel Old、CMS；整堆收集器：G1；
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**沙箱安全机制**
+
+**垃圾收集器**
+
+## 4、Linux
+
+
+
+##  5、Mysql
+
+#### <span style='color:red'>1）不可重复读（第一类丢失更新、第二类丢失更新）、脏读、幻读</span>
+
+1. **第一类丢失更新**(回滚丢失，Lost update) 
+
+​		A事务撤销时，把已经提交的B事务的更新数据覆盖了。这种错误可能造成很严重的问题，通过下面的账户取款转账就可以看出来：
+
+| 时间 | 取款事务A                             | 转账事务B                 |
+| ---- | ------------------------------------- | ------------------------- |
+| T1   | **开始事务**                          |                           |
+| T2   |                                       | **开始事务**              |
+| T3   | 查询账户余额为1000元                  |                           |
+| T4   |                                       | 查询账户余额为1000元      |
+| T5   |                                       | 汇入100元把余额改为1100元 |
+| T6   |                                       | **提交事务**              |
+| T7   | 取出100元把余额改为900元              |                           |
+| T8   | **撤销事务**                          |                           |
+| T9   | **余额恢复为1000** **元（丢失更新）** |                           |
+
+ A事务在撤销时，“不小心”将B事务已经转入账户的金额给抹去了。
+
+2. **第二类丢失更新**(覆盖丢失/两次更新问题，Second lost update) 
+
+​		A事务覆盖B事务已经提交的数据，造成B事务所做操作丢失：  
+
+| 时间 | 转账事务A                             | 取款事务B                |
+| ---- | ------------------------------------- | ------------------------ |
+| T1   |                                       | **开始事务**             |
+| T2   | **开始事务**                          |                          |
+| T3   |                                       | 查询账户余额为1000元     |
+| T4   | 查询账户余额为1000元                  |                          |
+| T5   |                                       | 取出100元把余额改为900元 |
+| T6   |                                       | **提交事务**             |
+| T7   | 汇入100元                             |                          |
+| T8   | **提交事务**                          |                          |
+| T9   | **把余额改为1100** **元（丢失更新）** |                          |
+
+​		上面的例子里由于支票转账事务覆盖了取款事务对存款余额所做的更新，导致银行最后损失了100元，相反如果转账事务先提交，那么用户账户将损失100元。
+
+3. **脏读**
+
+​		A事务执行过程中，B事务读取了A事务的修改。但是由于某些原因，A事务可能没有完成提交，发生RollBack了操作，则B事务所读取的数据就会是不正确的。这个未提交数据就是脏读（Dirty Read）。
+
+3. **幻读**
+
+​		B事务读取了两次数据，在这两次的读取过程中A事务添加了数据，B事务的这两次读取出来的集合不一样。（与不可重读的区别在于，第二次读到了新插入的数据，即使对全部数据上锁，也锁不住新加入的数据；）
+
+#### <span style='color:red'>2）隔离级别</span>
+
+1）**Read uncommitted 读得到未提交数据**（最低级别）
+
+在该隔离级别，所有事务都可以看到其他未提交事务的执行结果。本隔离级别很少用于实际应用，因为它的性能也不比其他级别好多少。读取未提交的数据，也被称之为脏读（Dirty Read）。
+
+2）**Read committed 读已提交数据**（可避免脏读）
+
+这是大多数数据库系统的默认隔离级别（**但不是MySQL默认的、Oracle默认**）。它满足了隔离的简单定义：一个事务只能看见已经提交事务所做的改变。这种隔离级别也支持所谓的不可重复读（Nonrepeatable Read），因为同一事务的其他实例在该实例处理其间可能会有新的commit，所以同一select可能返回不同结果。
+
+3）**Repeatable read 可重复读**（避免脏读，不可重复读）（**MySQL默认**）
+
+这是MySQL的默认事务隔离级别，它确保同一事务的多个实例在并发读取数据时，会看到同样的数据行。不过理论上，这会导致另一个棘手的问题：幻读 （Phantom Read）。简单的说，幻读指当用户读取某一范围的数据行时，另一个事务又在该范围内插入了新行，当用户再读取该范围的数据行时，会发现有新的“幻影” 行。InnoDB和Falcon存储引擎通过多版本并发控制（MVCC，Multiversion Concurrency Control）机制解决了该问题。
+
+4）**Serializable 串行化**（最高级别，可避免脏读，不可重复读，幻读）
+
+这是最高的隔离级别，它通过强制事务排序，使之不可能相互冲突，从而解决幻读问题。简言之，它是在每个读的数据行上加上共享锁。在这个级别，可能导致大量的超时现象和锁竞争。
+
+#### <span style='color:red'>3）mysql自带的数据库</span>
+
+其中information_schema、performance_schema、mysql、sys 都是mysql自动创建的数据库，如下给出这几库的简单信息：
+
+**information_schema**数据库又称为信息架构，数据表保存了MySQL服务器所有数据库的信息。如数据库名，数据库的表，表栏的数据类型与访问权限等。
+
+**performance_schema**数据库主要用于收集数据库服务器性能参数，以便优化mysql数据库性能。
+
+**mysql**数据库是存储着与MySQL运行相关的基本信息等数据管理的数据库。
+
+**sys** 数据库是mysql5.7增加的，通过这个库可以快速的了解系统的元数据信息，这个库可以方便DBA发现数据库的很多信息，提供解决性能瓶颈的信息。
+
+#### <span style='color:red'>4）b树和b+树</span>
+
+1. **b树**：是一种多路搜索树
+
+   a. 每个节点最多有m-1个关键字；
+
+   b. 根节点最少可以只有1个关键字；
+
+   c. 非根节点至少有m/2个关键字；
+
+   d. 每个节点中的关键字都按照从小到大的顺序排列，每个关键字的左子树中的所有关键字都小于它，而右子树中的所有关键字都大于它；
+
+   e. 所有叶子节点都位于同一层，或者说根节点到每个叶子节点的长度都相同；
+
+   f. 每个节点都存有索引和数据，也就是对应的key和value；
+
+   如：（M=3）
+
+![img](https://img-blog.csdnimg.cn/20190626150937968.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhczcyMw==,size_16,color_FFFFFF,t_70)
+
+​		B-树的搜索，从根结点开始，对结点内的关键字（有序）序列进行二分查找，如果命中则结束，否则进入查询关键字所属范围的儿子 		结点；重复，直到所对应的儿子指针为空，或已经是叶子结点；
+
+​		B-树的特性：
+
+​    		1.关键字集合分布在整颗树中；
+
+​    		2.任何一个关键字出现且只出现在一个结点中；
+
+​    		3.搜索有可能在非叶子结点结束；
+
+​    		4.其搜索性能等价于在关键字全集内做一次二分查找；
+
+​    		5.自动层次控制；
+
+​    		由于限制了除根结点以外的非叶子结点，至少含有M/2个儿子，确保了结点的至少利用率，其最低搜索性能为：
+
+![img](https://img-blog.csdnimg.cn/20190626150937763.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhczcyMw==,size_16,color_FFFFFF,t_70)
+
+​		其中，M为设定的非叶子结点最多子树个数，N为关键字总数；
+
+​    	所以B-树的性能总是等价于二分查找（与M值无关），也就没有B树平衡的问题；
+
+​    	由于M/2的限制，在**插入结点**时，如果结点已满，需要将结点分裂为两个各占M/2的结点；**删除结点**时，需将两个不足M/2的兄弟结		点合并；
+
+
+
+2. **b+树**：B+树是B-树的变体，也是一种多路搜索树
+
+   a. 其定义基本与B-树同，除了：
+
+   b. 非叶子结点的子树指针与关键字个数相同；
+
+   c. 非叶子结点的子树指针P[i]，指向关键字值属于[K[i], K[i+1])的子树（b树是开区间）；
+
+   d. 为所有叶子结点增加一个链指针；
+
+   e. 所有关键字都在叶子结点出现；
+
+    如：（M=3）
+
+![img](https://img-blog.csdnimg.cn/20190626150938306.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xhczcyMw==,size_16,color_FFFFFF,t_70)
+
+​		B+的搜索与B-树也基本相同，区别是B+树只有达到叶子结点才命中（B-树可以在非叶子结点命中），其性能也等价于在关键字全集		做一次二分查找；
+
+​    	B+的特性：
+
+​    		1.所有关键字都出现在叶子结点的链表中（稠密索引），且链表中的关键字恰好是有序的；
+
+​		    2.不可能在非叶子结点命中；
+
+​		    3.非叶子结点相当于是叶子结点的索引（稀疏索引），叶子结点相当于是存储（关键字）数据的数据层；
+
+​		    4.更适合文件索引系统；
+
+**mysql选择用b+树做索引不是b树**：
+
+1、 **B+树的磁盘读写代价更低**：B+树的内部节点并没有指向关键字具体信息的指针，因此其内部节点相对B树更小，如果把所有同一内部节点的关键字存放在同一盘块中，那么盘块所能容纳的关键字数量也越多，一次性读入内存的需要查找的关键字也就越多，相对IO读写次数就降低了。
+
+2、**B+树的查询效率更加稳定**：由于非终结点并不是最终指向文件内容的结点，而只是叶子结点中关键字的索引。所以任何关键字的查找必须走一条从根结点到叶子结点的路。所有关键字查询的路径长度相同，导致每一个数据的查询效率相当。
+
+3、**B+树更便于遍历**：由于B+树的数据都存储在叶子结点中，分支结点均为索引，方便扫库，只需要扫一遍叶子结点即可，但是B树因为其分支结点同样存储着数据，我们要找到具体的数据，需要进行一次中序遍历按序来扫，所以B+树更加适合在区间查询的情况，所以通常B+树用于数据库索引。
+
+4、**B+树更适合基于范围的查询**：B树在提高了IO性能的同时并没有解决元素遍历的我效率低下的问题，正是为了解决这个问题，B+树应用而生。B+树只需要去遍历叶子节点就可以实现整棵树的遍历。而且在数据库中基于范围的查询是非常频繁的，而B树不支持这样的操作或者说效率太低。
+
+#### <span style='color:red'>5）哈希和B+树优缺点</span>
+
+简单地说，**哈希索引就是采用一定的哈希算法**，把键值换算成新的哈希值，检索时不需要类似B+树那样从根节点到叶子节点逐级查找，只需一次哈希算法即可立刻定位到相应的位置，速度非常快。
+
+B+树索引和哈希索引的明显区别是：
+
+- **如果是等值查询，那么哈希索引明显有绝对优势**，因为只需要经过一次算法即可找到相应的键值；当然了，这个前提是，键值都是唯一的。如果键值不是唯一的，就需要先找到该键所在位置，然后再根据链表往后扫描，直到找到相应的数据；
+- **如果是范围查询检索，这时候哈希索引就毫无用武之地了**，因为原先是有序的键值，经过哈希算法后，有可能变成不连续的了，就没办法再利用索引完成范围查询检索；
+- 同理，**哈希索引也没办法利用索引完成排序**，以及like ‘xxx%’ 这样的部分模糊查询（这种部分模糊查询，其实本质上也是范围查询）；
+- 优化器无法使用哈希索引来加速 ORDER BY操作。
+- **哈希索引也不支持多列联合索引的最左匹配规则**；
+- B+树索引的关键字检索效率比较平均，不像B树那样波动幅度大，**在有大量重复键值情况下，哈希索引的效率也是极低的，因为存在所谓的哈希碰撞问题**。
+
+#### <span style='color:red'>6）mysql的索引</span>
+
+MySQL 索引可以分为**普通索引（单列索引）**、 **复合索引（组合索引）**、**唯一索引**、**主键索引**、**全文索引**等
+
+1. **普通索引（单列索引）**：也称为普通索引，单列索引是最基本的索引，它没有任何限制。
+
+2. **复合索引（组合索引）**：是在多个字段上创建的索引。**复合索引遵守“最左前缀”原则**，**即在查询条件中使用了复合索引的第一个字段，索引才会被使用**。因此，在复合索引中索引列的顺序至关重要。
+
+3. **唯一索引**：和普通索引类似，主要的区别在于，**唯一索引限制列的值必须唯一，但允许存在空值（只允许存在一条空值）**。
+
+   如果在已经有数据的表上添加唯一性索引的话：
+
+   a. 如果添加索引的列的值存在两个或者两个以上的**空值**，则不能创建唯一性索引会失败。（一般在创建表的时候，要对自动设置唯一性索引，需要在字段上加上 not null）
+   b. 如果添加索引的列的值存在两个或者两个以上的**null值**，还是可以创建唯一性索引，只是后面创建的数据不能再插入null值 ，并且严格意义上此列并不是唯一的，因为存在多个null值。
+
+4. **主键索引**：是一种特殊的唯一索引，一个表只能有一个
+
+5. 主键，不允许有空值。一般是在建表的时候同时创建主键索引
+
+6. **全文索引**：主要用来查找文本中的关键字，而不是直接与索引中的值相比较。
+
+   在一般情况下，模糊查询都是通过 like 的方式进行查询。但是，对于海量数据，这并不是一个好办法，在 like “value%” 可以使用索引，但是对于 like “%value%” 这样的方式，执行全表查询，这在数据量小的表，不存在性能问题，但是对于海量数据，全表扫描是非常可怕的事情,所以 like 进行模糊匹配性能很差。
+
+   这种情况下，需要考虑使用全文搜索的方式进行优化。全文搜索在 MySQL 中是一个 FULLTEXT 类型索引。**FULLTEXT 索引在 MySQL 5.6 版本之后支持 InnoDB，而之前的版本只支持 MyISAM 表**。
+
+   MySQL 的全文索引最开始仅支持英语，因为英语的词与词之间有空格，使用空格作为分词的分隔符是很方便的。亚洲文字，比如汉语、日语、汉语等，是没有空格的，这就造成了一定的限制。不过 MySQL 5.7.6 开始，引入了一个 **ngram** 全文分析器来解决这个问题，并且对 MyISAM 和 InnoDB 引擎都有效。
+
+   事实上，MyISAM 存储引擎对全文索引的支持有很多的限制，例如表级别锁对性能的影响、数据文件的崩溃、崩溃后的恢复等，这使得 MyISAM 的全文索引对于很多的应用场景并不适合。所以，多数情况下的建议是使用别的解决方案，例如 **Sphinx**、**Lucene** 等等第三方的插件，亦或是使用 InnoDB 存储引擎的全文索引。
+
+**索引的性质**：
+
+1**.索引字段要尽量的小**：我们知道IO次数取决于b+树的高度h，假设当前数据表的数据为N，每个磁盘块的数据项的数量是m，则有h=㏒(m+1)N，当数据量N一定的情况下，m越大，h越小；而m = 磁盘块的大小 / 数据项的大小，磁盘块的大小也就是一个数据页的大小，是固定的，如果数据项占的空间越小，数据项的数量越多，树的高度越低。这就是为什么每个数据项，即索引字段要尽量的小，比如int占4字节，要比bigint8字节少一半。这也是为什么b+树要求把真实的数据放到叶子节点而不是内层节点，一旦放到内层节点，磁盘块的数据项会大幅度下降，导致树增高。当数据项等于1时将会退化成线性表。
+2.**索引的最左匹配特性（即从左往右匹配）**：当b+树的数据项是复合的数据结构，比如(name,age,sex)的时候，b+数是按照从左到右的顺序来建立搜索树的，比如当(张三,20,F)这样的数据来检索的时候，b+树会优先比较name来确定下一步的所搜方向，如果name相同再依次比较age和sex，最后得到检索的数据；但当(20,F)这样的没有name的数据来的时候，b+树就不知道下一步该查哪个节点，因为建立搜索树的时候name就是第一个比较因子，必须要先根据name来搜索才能知道下一步去哪里查询。比如当(张三,F)这样的数据来检索时，b+树可以用name来指定搜索方向，但下一个字段age的缺失，所以只能把名字等于张三的数据都找到，然后再匹配性别是F的数据了， 这个是非常重要的性质，即索引的最左匹配特性。
+
+#### <span style='color:red'>7）mysql的存储引擎</span>
+
+1、存储引擎其实就是对于数据库文件的一种存取机制，如何实现存储数据，如何为存储的数据建立索引以及如何更新，查询数据等技术实现的方法。
+
+2、MySQL中的数据用各种不同的技术存储在文件（或内存）中，这些技术中的每一种技术都使用不同的存储机制，索引技巧，锁定水平并且最终提供广泛的不同功能和能力。在MySQL中将这些不同的技术及配套的相关功能称为存储引擎。
+
+**MySQL中常用的几种存储引擎**：**MyISAM**、**InnoDB**、**MEMORY**、**ARCHIVE**
+
+**InnoDB**：支持事务处理，支持外键，支持崩溃修复能力和并发控制。如果需要对事务的完整性要求比较高（比如银行），要求实现并发控制（比如售票），那选择InnoDB有很大的优势。如果需要频繁的更新、删除操作的数据库，也可以选择InnoDB，因为支持事务的提交（commit）和回滚（rollback）。
+
+**MyISAM**：插入数据快，空间和内存使用比较低。如果表主要是用于插入新记录和读出记录，那么选择MyISAM能实现处理高效率。如果应用的完整性、并发性要求比 较低，也可以使用。如果数据表主要用来插入和查询记录，则MyISAM引擎能提供较高的处理效率
+
+**MEMORY**：所有的数据都在内存中，数据的处理速度快，但是安全性不高。如果需要很快的读写速度，对数据的安全性要求较低，可以选择MEMOEY。它对表的大小有要求，不能建立太大的表。所以，这类数据库只使用在相对较小的数据库表。如果只是临时存放数据，数据量不大，并且不需要较高的数据安全性，可以选择将数据保存在内存中的Memory引擎，MySQL中使用该引擎作为临时表，存放查询的中间结果
+
+**Archive**：如果只有INSERT和SELECT操作，可以选择Archive，Archive支持高并发的插入操作，但是本身不是事务安全的。Archive非常适合存储归档数据，如记录日志信息可以使用Archive
+
+注意，同一个数据库也可以使用多种存储引擎的表。如果一个表要求比较高的事务处理，可以选择InnoDB。这个数据库中可以将查询要求比较高的表选择MyISAM存储。如果该数据库需要一个用于查询的临时表，可以选择MEMORY存储引擎。
+
+![image-20210306154156555](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210306154156555.png)
+
+Innodb有frm表结构文件，ibd存表数据和表索引
+
+MYISAM有frm表结构文件，MYD是表数据文件，MYI是表索引文件
+
+#### <span style='color:red'>8）mysql的事务</span>
+
+事务**ACID**(atomicity原子性、consistency一致性、isolation隔离性、durability持久性)
+**A**：事务要么全执行，要么全不执行
+**C**：事务执行前后，数据完整性一致
+**I**：多用户并发访问数据库时，数据库为每个用户创建的事务间相互隔离
+**D**：事务一旦被提交，对数据库中数据的改变就是持久的
+
+#### <span style='color:red'>9）mysql的锁</span>
+
+**共享锁（读锁）**：其他事务可以读，但不能写。
+
+**排他锁（写锁）** ：其他事务不能读取，也不能写。
+
+<span style='color:red'>**表级锁、行级锁、页面锁**</span>
+
+**MyISAM** 和 **MEMORY** 存储引擎采用的是**表级锁**（table-level locking）
+
+**BDB** 存储引擎采用的是**页面锁**（page-level locking），但也支持**表级锁**
+
+**InnoDB** 存储引擎既支持**行级锁**（row-level locking），也支持**表级锁**，但默认情况下是采用**行级锁**。
+
+默认情况下，表锁和行锁都是自动获得的， 不需要额外的命令。**但是在有的情况下**， 用户需要明确地进行锁表或者进行事务的控制， 以便确保整个事务的完整性，这样就需要使用事务控制和锁定语句来完成。
+
+- **表级锁**：开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高，并发度最低。
+
+- - 这些存储引擎通过总是一次性同时获取所有需要的锁以及总是按相同的顺序获取表锁来避免死锁。
+  - 表级锁更适合于以查询为主，并发用户少，只有少量按索引条件更新数据的应用，如Web 应用
+
+- **行级锁**：开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低，并发度也最高。
+
+- - 最大程度的支持并发，同时也带来了最大的锁开销。
+  - 在 InnoDB 中，除单个 SQL 组成的事务外，
+    锁是逐步获得的，这就决定了在 InnoDB 中发生死锁是可能的。
+  - 行级锁只在存储引擎层实现，而Mysql服务器层没有实现。 行级锁更适合于有大量按索引条件并发更新少量不同数据，同时又有并发查询的应用，如一些在线事务处理（OLTP）系统
+
+- **页面锁**：开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般。
+
+<span style='color:red'>**MyISAM表级锁模式**</span>
+
+- **表共享读锁** （Table Read Lock）：不会阻塞其他用户对同一表的读请求，但会阻塞对同一表的写请求；
+- **表独占写锁** （Table Write Lock）：会阻塞其他用户对同一表的读和写操作；
+
+**MyISAM 表的读操作与写操作之间，以及写操作之间是串行的。当一个线程获得对一个表的写锁后， 只有持有锁的线程可以对表进行更新操作。 其他线程的读、 写操作都会等待，直到锁被释放为止。**
+
+**默认情况**下，写**锁比读锁具有更高的优先级**：当一个锁释放时，这个锁会优先给写锁队列中等候的获取锁请求，然后再给读锁队列中等候的获取锁请求。
+
+这也正是 MyISAM 表**不太适合于有大量更新操作和查询操作**应用的原因，因为，大量的更新操作会造成查询操作很难获得读锁，从而可能永远阻塞。同时，一些需要长时间运行的查询操作，也会使写线程“饿死” ，应用中应尽量避免出现长时间运行的查询操作（在可能的情况下可以**通过使用中间表等措施对SQL语句做一定的“分解”** ，使每一步查询都能在较短时间完成，从而减少锁冲突。如果复杂查询不可避免，应尽量安排在数据库空闲时段执行，比如一些定期统计可以安排在夜间执行）。
+
+<span style='color:red'>**MyISAM加表锁方法**</span>
+
+MyISAM 在执行查询语句（SELECT）前，会**自动给涉及的表加读锁**，在执行更新操作（UPDATE、DELETE、INSERT 等）前，会**自动给涉及的表加写锁**，这个过程并不需要用户干预，因此，用户一般不需要直接用 LOCK TABLE 命令给 MyISAM 表显式加锁。
+
+在自动加锁的情况下，**MyISAM 总是一次获得 SQL 语句所需要的全部锁**，这也正是 **MyISAM 表不会出现死锁**（Deadlock Free）的原因。
+
+**MyISAM存储引擎支持并发插入**，以减少给定表的读和写操作之间的争用：
+
+如果一张MyISAM表的数据文件没有洞（在表的中间有删除行），在SELECT语句从表中读取行的同时，一条插入语句在执行的时候可以将新插入的行增加到表的最后。如果有多个INSERT语句，它们会排成队列并依次执行。并发插入的结果可能不会立刻可见。
+
+系统参数concurrent_insert可以用来更改并发插入的处理。
+
+- 当concurrent_insert设置为0时，不允许并发插入。
+- 当concurrent_insert设置为1时，如果MyISAM表中没有空洞（即表的中间没有被删除的行），MyISAM允许在一个线程读表的同时，另一个线程从表尾插入记录。**这也是MySQL的默认设置**。
+- 当concurrent_insert设置为2时，无论MyISAM表中有没有空洞，都允许在表尾并发插入记录。
+
+<span style='color:red'>**查询表级锁争用情况**</span>
+
+可以通过检查 **table_locks_waited** 和 **table_locks_immediate** 状态变量来分析系统上的表锁的争夺，如果 Table_locks_waited 的值比较高，则说明存在着较严重的表级锁争用情况
+
+<span style='color:red'>**InnoDB锁模式**</span>
+
+InnoDB 实现了以下两种类型的**行锁**：
+
+- **共享锁**（S）：允许一个事务去读一行，阻止其他事务获得相同数据集的排他锁。
+- **排他锁**（X）：允许获得排他锁的事务更新数据，阻止其他事务取得相同数据集的共享读锁和排他写锁。
+
+**为了允许行锁和表锁共存，实现多粒度锁机制**，InnoDB 还有两种内部使用的**意向锁**（Intention Locks），这两种意向锁都是**表锁**：
+
+- **意向共享锁**（IS）：事务打算给数据行加行共享锁，事务在给一个数据行加共享锁前必须先取得该表的 IS 锁。
+- **意向排他锁**（IX）：事务打算给数据行加行排他锁，事务在给一个数据行加排他锁前必须先取得该表的 IX 锁。
+
+![img](https://pic4.zhimg.com/80/v2-37761612ead11ddc3762a4c20ddab3f3_1440w.jpg)
+
+<span style='color:red'>**InnoDB加锁方法**</span>
+
+- **意向锁是 InnoDB 自动加的**， 不需用户干预。
+
+- 对于 UPDATE、 DELETE 和 INSERT 语句， **InnoDB会自动给涉及数据集加排他锁**（X)；
+
+- 对于普通 SELECT 语句，**InnoDB 不会加任何锁**；**事务可以通过以下语句显式给记录集加共享锁或排他锁**：
+
+- - 共享锁（S）：SELECT * FROM table_name WHERE ... LOCK IN SHARE MODE。 其他 session 仍然可以查询记录，并也可以对该记录加 share mode 的共享锁。但是如果当前事务需要对该记录进行更新操作，则很有可能造成死锁。
+  - 排他锁（X)：SELECT * FROM table_name WHERE ... FOR UPDATE。其他 session 可以查询该记录，但是不能对该记录加共享锁或排他锁，而是等待获得锁
+
+- **隐式锁定：**
+
+InnoDB在事务执行过程中，使用两阶段锁协议：
+
+随时都可以执行锁定，InnoDB会根据隔离级别在需要的时候自动加锁；
+
+锁只有在执行commit或者rollback的时候才会释放，并且所有的锁都是在**同一时刻**被释放。
+
+- **显式锁定 ：**
+
+```text
+select ... lock in share mode //共享锁 
+select ... for update //排他锁 
+```
+
+**select for update：**
+
+在执行这个 select 查询语句的时候，会将对应的索引访问条目进行上排他锁（X 锁），也就是说这个语句对应的锁就相当于update带来的效果。
+
+**select XXX for update 的使用场景**：为了让自己查到的数据确保是最新数据，并且查到后的数据只允许自己来修改的时候，需要用到 for update 子句。
+
+**select lock in share mode ：**
+
+in share mode 子句的作用就是将查找到的数据加上一个 share 锁，这个就是表示其他的事务只能对这些数据进行简单的select 操作，并不能够进行 DML 操作。
+
+**select XXX lock in share mode 使用场景**：**为了确保自己查到的数据没有被其他的事务正在修改**，也就是说确保查到的数据是最新的数据，并且不允许其他人来修改数据。但是自己不一定能够修改数据，因为有可能其他的事务也对这些数据 使用了 in share mode 的方式上了 S 锁。
+
+**性能影响：**
+select for update 语句，相当于一个 update 语句。在业务繁忙的情况下，**如果事务没有及时的commit或者rollback 可能会造成其他事务长时间的等待**，从而影响数据库的并发使用效率。
+select lock in share mode 语句是一个给查找的数据上一个共享锁（S 锁）的功能，它允许其他的事务也对该数据上S锁，但是不能够允许对该数据进行修改。**如果不及时的commit 或者rollback 也可能会造成大量的事务等待**。
+
+**for update 和 lock in share mode 的区别：**
+
+前一个上的是排他锁（X 锁），一旦一个事务获取了这个锁，其他的事务是没法在这些数据上执行 for update ；后一个是共享锁，多个事务可以同时的对相同数据执行 lock in share mode。
+
+<span style='color:red'>**InnoDB 行锁实现方式**</span>
+
+- InnoDB 行锁是**通过给索引上的索引项加锁来实现的**，这一点 MySQL 与 Oracle 不同，后者是通过在数据块中对相应数据行加锁来实现的。InnoDB 这种行锁实现特点意味着：**只有通过索引条件检索数据，InnoDB 才使用行级锁，否则，InnoDB 将使用表锁**！
+- 不论是使用主键索引、唯一索引或普通索引，**InnoDB 都会使用行锁来对数据加锁**。
+- **只有执行计划真正使用了索引，才能使用行锁**：即便在条件中使用了索引字段，但是否使用索引来检索数据是由 MySQL 通过判断不同执行计划的代价来决定的，如果 MySQL 认为全表扫描效率更高，比如对一些很小的表，它就不会使用索引，这种情况下 InnoDB 将使用表锁，而不是行锁。因此，在分析锁冲突时，别忘了检查 SQL 的执行计划（可以通过 explain 检查 SQL 的执行计划），以确认是否真正使用了索引。
+- **由于 MySQL 的行锁是针对索引加的锁**，不是针对记录加的锁，所以虽然多个session是访问不同行的记录， 但是如果是**使用相同的索引键， 是会出现锁冲突的**（后使用这些索引的session需要等待先使用索引的session释放锁后，才能获取锁）。 应用设计的时候要注意这一点。
+
+<span style='color:red'>**InnoDB的间隙锁**</span>
+
+当我们用**范围条件而不是相等条件**检索数据，并请求共享或排他锁时，InnoDB会给符合条件的已有数据记录的索引项加锁；**对于键值在条件范围内但并不存在的记录，叫做“间隙（GAP)”，InnoDB也会对这个“间隙”加锁**，这种锁机制就是所谓的间隙锁（Next-Key锁）。
+
+很显然，在使用范围条件检索并锁定记录时，**InnoDB这种加锁机制会阻塞符合条件范围内键值的并发插入**，这往往会造成严重的锁等待。因此，在实际应用开发中，尤其是并发插入比较多的应用，我们要尽量优化业务逻辑，尽量使用相等条件来访问更新数据，避免使用范围条件。
+
+**InnoDB使用间隙锁的目的：**
+
+1. **防止幻读**，以满足相关隔离级别的要求；
+2. 满足恢复和复制的需要：
+
+MySQL 通过 BINLOG 录入执行成功的 INSERT、UPDATE、DELETE 等更新数据的 SQL 语句，并由此实现 MySQL 数据库的恢复和主从复制。MySQL 的恢复机制（复制其实就是在 Slave Mysql 不断做基于 BINLOG 的恢复）有以下特点：
+
+一是 MySQL 的恢复是 SQL 语句级的，也就是重新执行 BINLOG 中的 SQL 语句。
+
+二是 MySQL 的 Binlog 是按照事务提交的先后顺序记录的， 恢复也是按这个顺序进行的。
+
+由此可见，MySQL 的恢复机制要求：在一个事务未提交前，其他并发事务不能插入满足其锁定条件的任何记录，也就是不允许出现幻读。
+
+<span style='color:red'>**获取 InnoDB 行锁争用情况**</span>
+
+可以通过检查 InnoDB_row_lock 状态变量来分析系统上的行锁的争夺情况
+
+```text
+mysql> show status like 'innodb_row_lock%'; 
++-------------------------------+-------+ 
+| Variable_name | Value | 
++-------------------------------+-------+ 
+| InnoDB_row_lock_current_waits | 0 | 
+| InnoDB_row_lock_time | 0 | 
+| InnoDB_row_lock_time_avg | 0 | 
+| InnoDB_row_lock_time_max | 0 | 
+| InnoDB_row_lock_waits | 0 | 
++-------------------------------+-------+ 
+5 rows in set (0.01 sec)
+```
+
+<span style='color:red'>**LOCK TABLES 和 UNLOCK TABLES**</span>
+
+Mysql也支持lock tables和unlock tables，**这都是在服务器层（MySQL Server层）实现的，和存储引擎无关**，它们有自己的用途，并不能替代事务处理。 （**除了禁用了autocommint后可以使用，其他情况不建议使用**）：
+
+- LOCK TABLES 可以锁定用于当前线程的表。如果表被其他线程锁定，则当前线程会等待，直到可以获取所有锁定为止。
+- UNLOCK TABLES 可以释放当前线程获得的任何锁定。**当前线程执行另一个 LOCK TABLES 时，或当与服务器的连接被关闭时，所有由当前线程锁定的表被隐含地解锁**
+
+**LOCK TABLES语法：**
+
+- 在用 LOCK TABLES 对 InnoDB 表加锁时要注意，**要将 AUTOCOMMIT 设为 0，否则MySQL 不会给表加锁**；
+- 事务结束前，**不要用 UNLOCK TABLES 释放表锁，因为 UNLOCK TABLES会隐含地提交事务**；
+- COMMIT 或 ROLLBACK 并不能释放用 LOCK TABLES 加的表级锁，**必须用UNLOCK TABLES 释放表锁**。
+
+正确的方式见如下语句：
+例如，如果需要写表 t1 并从表 t2读，可以按如下做：
+
+```text
+SET AUTOCOMMIT=0; 
+LOCK TABLES t1 WRITE, t2 READ, ...; 
+[do something with tables t1 and t2 here]; 
+COMMIT; 
+UNLOCK TABLES;
+```
+
+**使用LOCK TABLES的场景：**
+
+给表显示加表级锁（InnoDB表和MyISAM都可以），一般是为了在一定程度模拟事务操作，实现对某一时间点多个表的一致性读取。（与MyISAM默认的表锁行为类似）
+
+在用 LOCK TABLES 给表显式加表锁时，必须同时取得所有涉及到表的锁，并且 MySQL 不支持锁升级。也就是说，在执行 LOCK TABLES 后，只能访问显式加锁的这些表，不能访问未加锁的表；同时，如果加的是读锁，那么只能执行查询操作，而不能执行更新操作。
+
+其实，在MyISAM自动加锁（表锁）的情况下也大致如此，MyISAM 总是一次获得 SQL 语句所需要的全部锁，这也正是 MyISAM 表不会出现死锁（Deadlock Free）的原因。
+
+**例如**，有一个订单表 orders，其中记录有各订单的总金额 total，同时还有一个 订单明细表 order_detail，其中记录有各订单每一产品的金额小计 subtotal，假设我们需要检 查这两个表的金额合计是否相符，可能就需要执行如下两条 SQL：
+
+```text
+Select sum(total) from orders; 
+Select sum(subtotal) from order_detail; 
+```
+
+**这时，如果不先给两个表加锁，就可能产生错误的结果，因为第一条语句执行过程中，order_detail 表可能已经发生了改变**。因此，正确的方法应该是：
+
+```text
+Lock tables orders read local, order_detail read local; 
+Select sum(total) from orders; 
+Select sum(subtotal) from order_detail; 
+Unlock tables;
+```
+
+（在 LOCK TABLES 时加了“local”选项，其作用就是允许当你持有表的读锁时，其他用户可以在满足 MyISAM 表并发插入条件的情况下，在表尾并发插入记录（MyISAM 存储引擎支持“并发插入”））
+
+<span style='color:red'>**死锁**</span>
+
+- **死锁产生：**
+
+- - 互斥条件：一个资源每次只能被一个进程使用。
+  - 请求与保持条件：一个进程因请求资源而阻塞时，对已获得的资源保持不放。
+  - 不剥夺条件：进程已获得的资源，在末使用完之前，不能强行剥夺。
+  - 循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。
+
+- **检测死锁：**数据库系统实现了各种死锁检测和死锁超时的机制。InnoDB存储引擎能检测到死锁的循环依赖并立即返回一个错误。
+
+- **死锁恢复：**死锁发生以后，**只有部分或完全回滚其中一个事务，才能打破死锁**，InnoDB目前处理死锁的方法是，将持有最少行级排他锁的事务进行回滚。所以事务型应用程序在设计时必须考虑如何处理死锁，多数情况下只需要重新执行因死锁回滚的事务即可。
+
+- **外部锁的死锁检测：**发生死锁后，InnoDB 一般都能自动检测到，并使一个事务释放锁并回退，另一个事务获得锁，继续完成事务。但在涉及外部锁，或涉及表锁的情况下，InnoDB 并不能完全自动检测到死锁， 这需要通过设置锁等待超时参数innodb_lock_wait_timeout 来解决
+
+- **死锁影响性能：**死锁会影响性能而不是会产生严重错误，因为InnoDB会自动检测死锁状况并回滚其中一个受影响的事务。**在高并发系统上，当许多线程等待同一个锁时，死锁检测可能导致速度变慢**。 有时当发生死锁时，禁用死锁检测（使用innodb_deadlock_detect配置选项）可能会更有效，这时可以依赖innodb_lock_wait_timeout设置进行事务回滚。
+
+**MyISAM避免死锁：**
+
+- 在自动加锁的情况下，MyISAM 总是一次获得 SQL 语句所需要的全部锁，所以 MyISAM 表不会出现死锁。
+
+**InnoDB避免死锁：**
+
+- 为了在单个InnoDB表上执行多个并发写入操作时避免死锁，**可以在事务开始时通过为预期要修改的每个元祖（行）使用SELECT ... FOR UPDATE语句来获取必要的锁**，即使这些行的更改语句是在之后才执行的。
+- 在事务中，**如果要更新记录，应该直接申请足够级别的锁，即排他锁**，而不应先申请共享锁、更新时再申请排他锁，因为这时候当用户再申请排他锁时，其他事务可能又已经获得了相同记录的共享锁，从而造成锁冲突，甚至死锁
+- **如果事务需要修改或锁定多个表，则应在每个事务中以相同的顺序使用加锁语句**。 在应用中，如果不同的程序会并发存取多个表，应尽量约定以相同的顺序来访问表，这样可以大大降低产生死锁的机会
+- 通过SELECT ... LOCK IN SHARE MODE获取行的读锁后，如果当前事务再需要对该记录进行更新操作，则很有可能造成死锁。
+- 改变事务隔离级别
+
+如果出现死锁，可以用 SHOW INNODB STATUS 命令来确定最后一个死锁产生的原因。返回结果中包括死锁相关事务的详细信息，如引发死锁的 SQL 语句，事务已经获得的锁，正在等待什么锁，以及被回滚的事务等。据此可以分析死锁产生的原因和改进措施。
+
+**一些优化锁性能的建议**
+
+- **尽量使用较低的隔离级别**；
+- 精心设计索引， 并尽量使用索引访问数据， 使加锁更精确， 从而减少锁冲突的机会
+- 选择合理的事务大小，小事务发生锁冲突的几率也更小
+- 给记录集显示加锁时，最好一次性请求足够级别的锁。比如要修改数据的话，最好直接申请排他锁，而不是先申请共享锁，修改时再请求排他锁，这样容易产生死锁
+- 不同的程序访问一组表时，应尽量约定以相同的顺序访问各表，对一个表而言，尽可能以固定的顺序存取表中的行。这样可以大大减少死锁的机会
+- 尽量用相等条件访问数据，这样可以避免间隙锁对并发插入的影响
+- 不要申请超过实际需要的锁级别
+- 除非必须，查询时不要显示加锁。 MySQL的MVCC可以实现事务中的查询不用加锁，优化事务性能；MVCC只在COMMITTED READ（读提交）和REPEATABLE READ（可重复读）两种隔离级别下工作
+- 对于一些特定的事务，可以使用表锁来提高处理速度或减少死锁的可能
+
+#### <span style='color:red'>10）MVCC</span>
+
+MVCC（ Multi-Version Concurrency Control ，多版本并发控制）指的就是在使用**READ COMMITTD**、**REPEATABLE READ**这两种隔离级别的事务在执行普通的SEELCT操作时访问记录的**版本链**的过程。可以使不同事务的读-写、写-读操作并发执行，从而提升系统性能。
+
+<span style='color:red'>**隐式字段**</span>
+
+每行记录除了我们自定义的字段外，还有数据库隐式定义的DB_TRX_ID,DB_ROLL_PTR,DB_ROW_ID等字段
+
+- **DB_TRX_ID**
+  6byte，**最近修改(修改/插入)事务ID**：记录创建这条记录/最后一次修改该记录的事务ID
+- **DB_ROLL_PTR**
+  7byte，**回滚指针**，指向这条记录的上一个版本（存储于rollback segment里）
+- **DB_ROW_ID**
+  6byte，隐含的自增ID（**隐藏主键**），如果数据表没有主键，InnoDB会自动以DB_ROW_ID产生一个**聚簇索引**
+- 实际还有一个删除flag隐藏字段, 既记录被更新或删除并不代表真的删除，而是删除flag变了
+
+![img](https://upload-images.jianshu.io/upload_images/3133209-70cdae4621d5543e.png?imageMogr2/auto-orient/strip|imageView2/2/w/838/format/webp)
+
+<span style='color:red'>**ReadView**</span>
+
+对于使用**READ UNCOMMITTED**隔离级别的事务来说，**直接读取记录的最新版本**就好了，
+
+对于使用**SERIALIZABLE**隔离级别的事务来说，使用**加锁**的方式来访问记录。
+
+对于使用**READ COMMITTED**和**REPEATABLE READ**隔离级别的事务来说，就需要用到我们上边所说的版本链了，核心问题就是：需要判断一下版本链中的哪个版本是当前事务可见的。
+
+**ReadView中主要包含4个比较重要的内容**：
+
+1. **m_ids**：表示在生成ReadView时当前系统中**活跃的读写事务的事务id列表**。
+2. **min_trx_id**：表示在生成ReadView时当前系统中活跃的读写事务中**最小的事务id**，也就是m_ids中的最小值。
+3. **max_trx_id**：表示生成ReadView时系统中应该分配给**下一个事务的id值**。
+4. **creator_trx_id**：表示**生成该ReadView的事务的事务id**。
+
+注意max_trx_id并不是m_ids中的最大值，事务id是递增分配的。比方说现在有id为1， 2， 3这三个事务，之后id为3的事务提交了。那么一个新的读事务在生成ReadView时， m_ids就包括1和2， min_trx_id的值就是1，max_trx_id的值就是4。
+
+有了这个ReadView，这样在访问某条记录时，只需要按照下边的步骤判断记录的某个版本是否可见：
+
+1）如果被访问版本的**trx_id属性值与ReadView中的creator_trx_id值相同**，意味着当前事务在访问它自己修改过的记录，所以该版本可以被当前事务访问。
+2）如果被访问版本的**trx_id属性值小于ReadView中的min_trx_id值**，表明生成该版本的事务在当前事务生成ReadView前已经提交，所以该版本可以被当前事务访问。
+3）如果被访问版本的**trx_id属性值大于ReadView中的max_trx_id值**，表明生成该版本的事务**在当前事务生成ReadView后才开启**，所以该版本不可以被当前事务访问。
+4）如果被访问版本的**trx_id属性值在ReadView的min_trx_id和max_trx_id之间**，那就需要判断一下trx_id属性值是不是在m_ids列表中，如果在，说明创建ReadView时生成该版本的事务还是活跃的，该版本不可以被访问；如果不在，说明创建ReadView时生成该版本的事务已经被提交，该版本可以被访问
+
+READ COMMITTD、 REPEATABLE READ这两个隔离级别的一个很大不同就是：**生成ReadView的时机不同**， READ COMMITTD在每一次进行普通SELECT操作前都会生成一个ReadView，而REPEATABLE READ只在第一次进行普通SELECT操作前生成一个ReadView，之后的查询操作都重复使用这个ReadView就好了
+
+![img](https://upload-images.jianshu.io/upload_images/3133209-1d04f4bede14f4b5.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+
+![img](https://upload-images.jianshu.io/upload_images/3133209-ba10316e166babf6.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+
+## 6、redis
+
+## 7、Spring
+
+## 8、Mybatis
+
+## 9、SpringBoot
+
+## 10、SpringCloud
+
+## 11、Zookeeper
+
+## 12、Dubbo
+
+## 13、rabbitMQ
+
+## 14、Git
+
+## 15、Maven
+
+## 16、Docker
+
+## 17、数据结构
+
+## 18、设计模式
+
+### <span style='color:red'>一）创建型模式</span>
+
+#### <span style='color:red'>1）工厂方法模式</span>
+
+#### <span style='color:red'>2）抽象工厂模式</span>
+
+#### <span style='color:red'>3）单例模式</span>
+
+#### <span style='color:red'>4）建造者模式</span>
+
+#### <span style='color:red'>5）原型模式</span>
+
+### <span style='color:red'>二）结构型模式</span>
+
+#### <span style='color:red'>6）适配器模式</span>
+
+#### <span style='color:red'>7）装饰器模式</span>
+
+#### <span style='color:red'>8）代理模式</span>
+
+静态代理：由程序员创建或由特定工具自动生成源代码，再对其编译。在程序运行前，代理类的.class文件就已经存在了。
+
+动态代理：在程序运行时，运用反射机制动态创建而成。
+
+静态代理需要：**接口**，**基础实现类**，**代理类**（代理类中含有基础实现类作为成员变量）
+
+动态代理需要：**接口**，**基础实现类**，**处理程序的实现类**（继承**InvocationHandler**接口，实现接口），**代理类**（调用**Proxy**类的方法）
+
+#### <span style='color:red'>9）外观模式</span>
+
+#### <span style='color:red'>10）桥接模式</span>
+
+#### <span style='color:red'>11）组合模式</span>
+
+#### <span style='color:red'>12）享元模式</span>
+
+### <span style='color:red'>三）行为型模式</span>
+
+#### <span style='color:red'>13）策略模式</span>
+
+#### <span style='color:red'>14）模板方法模式</span>
+
+#### <span style='color:red'>15）观察者模式</span>
+
+#### <span style='color:red'>16）迭代子模式</span>
+
+#### <span style='color:red'>17）责任链模式</span>
+
+#### <span style='color:red'>18）命令模式</span>
+
+#### <span style='color:red'>19）备忘录模式</span>
+
+#### <span style='color:red'>20）状态模式</span>
+
+#### <span style='color:red'>21）访问者模式</span>
+
+#### <span style='color:red'>22）中介者模式</span>
+
+#### <span style='color:red'>23）解释器模式</span>
+
+
+
