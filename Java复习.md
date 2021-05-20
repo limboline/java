@@ -86,7 +86,7 @@ threshold是HashMap所能容纳的最大数据量的Node(键值对)个数。thre
 
 #### <span style='color:red'>6）异常</span>
 
-![img](https://img.jbzj.com/file_images/article/201910/20191030141258477.jpg?2019930141321)
+![img](https://raw.githubusercontent.com/limboline/PicBed/master/img/20210520173254.jpg)
 
 Throwable类有两个直接子类：
 
@@ -795,9 +795,9 @@ public class TestInner {
 
 #### <span style='color:red'>1）JVM结构框架</span>
 
-![image-20210112155234907](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112155234907.png)
+![image-20210112155234907](https://raw.githubusercontent.com/limboline/PicBed/master/img/20210520173410.png)
 
-![image-20210112160308549](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112160308549.png)
+![image-20210112160308549](https://raw.githubusercontent.com/limboline/PicBed/master/img/20210520173423.png)
 
 ![img](https://img-blog.csdnimg.cn/20190216114129109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L20wXzM3NTI0NjYx,size_16,color_FFFFFF,t_70)
 
@@ -812,7 +812,7 @@ public class TestInner {
 
 双亲委派机制
 
-![image-20210112163754431](C:\Users\hasee\AppData\Roaming\Typora\typora-user-images\image-20210112163754431.png)
+![image-20210112163754431](https://raw.githubusercontent.com/limboline/PicBed/master/img/20210520173435.png)
 
 #### <span style='color:red'>3）堆内存在不同jdk版本中的分配</span>
 
