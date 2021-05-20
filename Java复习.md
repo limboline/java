@@ -859,6 +859,8 @@ JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务
 
 
 
+
+
 ##  5、Mysql
 
 #### <span style='color:red'>1）不可重复读（第一类丢失更新、第二类丢失更新）、脏读、幻读</span>
