@@ -859,8 +859,6 @@ JVM 每次只会使用 Eden 和其中的一块 Survivor 区域来为对象服务
 
 
 
-
-
 ##  5、Mysql
 
 #### <span style='color:red'>1）不可重复读（第一类丢失更新、第二类丢失更新）、脏读、幻读</span>
@@ -1409,6 +1407,18 @@ READ COMMITTD、 REPEATABLE READ这两个隔离级别的一个很大不同就是
 ![img](https://upload-images.jianshu.io/upload_images/3133209-ba10316e166babf6.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
 
 ## 6、redis
+
+#### <span style='color:red'>1）什么是redis</span>
+
+Redis(Remote Dictionary Server) 是一个使用 C 语言编写的，开源的（BSD许可）高性能非关系型（NoSQL）的键值对数据库。
+
+与传统数据库不同的是 Redis 的数据是存在内存中的，所以读写速度非常快，因此 redis 被广泛应用于缓存方向，每秒可以处理超过 10万次读写操作，是已知性能最快的Key-Value DB。另外，Redis 也经常用来做分布式锁。除此之外，Redis 支持事务 、持久化、LUA脚本、LRU驱动事件、多种集群方案。
+
+#### <span style='color:red'>2）redis支持的数据类型</span>
+
+五大常用数据类型：String、Hash、List、Set、Zset
+
+
 
 ## 7、Spring
 
