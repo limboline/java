@@ -1608,17 +1608,13 @@ Redis Cluster的整个数据库将会被分为**16384**个哈希槽，数据库�
 
 **如何实现故障转移**
 
-其实**与哨兵模式类似**，Redis的每个节点都会定期向其他节点发送Ping消息，以此来检测对方是否在线。当一个节点检测到另一个节点下线后，会将其设置为疑似下线。如果一个机器中，**有半数以上的节点将某个主节点设为疑似下线**，则该节点将会被标记为已下线状态，并开始执行故障转移。
+其实**与哨兵模式类似**，Redis的每个节点都会定期向其他节点发送Ping消息，以此来检测对方是否在线。当一个节点检测到另一个节点下线后，会将其设置为疑似下线。如果一个机器中，**有半数以上的节点将某个主节点设为疑Collection线程安全似下线**，则该节点将会被标记为已下线状态，并开始执行故障转移。
 
 1. 通过raft算法**从下线主节点的从节点中选出新的主节点**
 2. 被选中的从节点执行 `SLAVEOF no one` 命令，成为新的主节点
 3. 新的主节点**撤销掉已下线主节点的槽指派，并将这些槽指给自己**
 4. 新的主节点向集群中**广播自己由从节点变为主节点**
 5. 新的主节点开始接受和负责自己处理槽的有关命令请求
-
-#### <span style='color:red'>12）redis分布式</span>
-
-
 
 #### <span style='color:red'>n）杂七杂八</span>
 
@@ -1628,29 +1624,82 @@ Redis Cluster的整个数据库将会被分为**16384**个哈希槽，数据库�
 
 **SDS**
 
+**分布式锁（redission）**
+
+**redis性能优化**
+
 ## 7、Spring
+
+#### <span style='color:red'>1）什么是Spring</span>
+
+Spring是一个**轻量级的IoC和AOP容器框架**。是为Java应用程序提供基础性服务的一套框架，目的是用于简化企业应用程序的开发，它使得开发者只需要关心业务需求。主要包括以下七个模块：
+
+Spring Context：提供框架式的Bean访问方式，以及企业级功能（JNDI、定时任务等）；
+
+Spring Core：核心类库，所有功能都依赖于该类库，提供IOC和DI服务；
+
+Spring AOP：AOP服务；
+
+Spring Web：提供了基本的面向Web的综合特性，提供对常见框架如Struts2的支持，Spring能够管理这些框架，将Spring的资源注入给框架，也能在这些框架的前后插入拦截器；
+
+Spring MVC：提供面向Web应用的Model-View-Controller，即MVC实现。
+
+Spring DAO：对JDBC的抽象封装，简化了数据访问异常的处理，并能统一管理JDBC事务；
+
+Spring ORM：对现有的ORM框架的支持；
+
+
+
+下图对应的是Spring 4.x的版本，5.x版本中Web模块的Portlet组件已经被废弃
+
+![img](https://img-blog.csdnimg.cn/20201209012554205.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2E3NDUyMzM3MDA=,size_16,color_FFFFFF,t_70)
+
+#### <span style='color:red'>2）Spring 的优点</span>
+
+1. spring属于**低侵入式设计**，代码的污染极低；
+2. spring的**DI（依赖注入）机制**将对象之间的依赖关系交由框架处理，**减低**组件的**耦合性**；
+3. Spring提供了**AOP技术**，支持将一些通用任务，如安全、事务、日志、权限等进行集中式管理，从而提供更好的复用。
+4. spring对于主流的应用框架提供了集成支持。
+
+#### <span style='color:red'>3）Spring的IoC理解</span>
+
+1. IOC就是**控制反转**，指**创建对象的控制权转移给Spring框架进行管理**，并由Spring根据配置文件去创建实例和管理各个实例之间的依赖关系，对象与对象之间松散耦合，也利于功能的复用。DI依赖注入，和控制反转是同一个概念的不同角度的描述，即应用程序在运行时依赖IoC容器来动态注入对象需要的外部依赖。
+2. 最直观的表达就是，以前创建对象的主动权和时机都是由自己把控的，**IOC让对象的创建不用去new了**，**可以由spring自动生产**，**使用java的反射机制**，根据配置文件在运行时动态的去创建对象以及管理对象，并调用对象的方法的。
+3. Spring的IOC有三种注入方式 ：**构造器注入（xml文件constructor）**、**setter方法注入（xml文件ref）**、**根据注解注入**。
+
+#### <span style='color:red'>4）Spring的AOP理解</span>
+
+#### <span style='color:red'>5）Spring中bean的作用域</span>
+
+#### <span style='color:red'>6）Spring中循环依赖的问题</span>
 
 ## 8、Mybatis
 
 ## 9、SpringBoot
 
-## 10、SpringCloud
+## 10、分布式
 
-## 11、Zookeeper
+#### <span style='color:red'>1）一致性</span>
 
-## 12、Dubbo
+#### <span style='color:red'>2）雪崩、击穿、穿透</span>
 
-## 13、rabbitMQ
+## 11、SpringCloud
 
-## 14、Git
+## 12、Zookeeper
 
-## 15、Maven
+## 13、Dubbo
 
-## 16、Docker
+## 14、rabbitMQ
 
-## 17、数据结构
+## 15、Git
 
-## 18、设计模式
+## 16、Maven
+
+## 17、Docker
+
+## 18、数据结构
+
+## 19、设计模式
 
 ### <span style='color:red'>一）创建型模式</span>
 
