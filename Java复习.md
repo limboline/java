@@ -1669,11 +1669,126 @@ Spring ORM：对现有的ORM框架的支持；
 
 #### <span style='color:red'>4）Spring的AOP理解</span>
 
-#### <span style='color:red'>5）Spring中bean的作用域</span>
+**OOP面向对象**，允许开发者定义**纵向**的关系，但并不适用于定义**横向**的关系，会导致大量代码的重复，而不利于各个模块的重用。
+
+**AOP**，一般称为**面向切面**，作为**面向对象的一种补充**，用于将那些与业务无关，但却对多个对象产生影响的公共行为和逻辑，抽取并封装为一个可重用的模块，这个模块被命名为“切面”（Aspect），**减少**系统中的**重复代码**，**降低**了模块间的**耦合度**，**提高**系统的**可维护性**。可用于权限认证、日志、事务处理。
+
+Spring AOP中的动态代理主要有两种方式，JDK动态代理和CGLIB动态代理：
+
+**JDK动态代理**只提供接口的代理，不支持类的代理，要求被代理类实现接口。JDK动态代理的核心是**InvocationHandler**接口和**Proxy**类，在获取代理对象时，使用Proxy类来动态创建目标类的代理类（即最终真正的代理类，这个类继承自Proxy并实现了我们定义的接口），当代理对象调用真实对象的方法时， InvocationHandler 通过invoke()方法反射来调用目标类中的代码，动态地将横切逻辑和业务编织在一起；
+
+如果被代理类**没有实现接口**，那么**Spring AOP会选择使用CGLIB来动态代理目标类**。CGLIB（Code Generation Library），是一个代码生成的类库，可以在运行时动态的生成指定类的一个子类对象，并覆盖其中特定方法并添加增强代码，从而实现AOP。CGLIB是通过继承的方式做的动态代理，因此**如果某个类被标记为final，那么它是无法使用CGLIB做动态代理的**。
+
+#### <span style='color:red'>5）Spring中bean的生命周期和作用域</span>
+
+Spring Bean的生命周期只有四个阶段：**实例化** Instantiation --> **属性赋值** Populate --> **初始化** Initialization --> **销毁** Destruction
+
+![img](https://img-blog.csdnimg.cn/img_convert/84341632e9df3625a91c3e2a1437ee65.png)
+
+1. **实例化Bean**：
+
+   对于**BeanFactory**容器，当客户向容器请求一个尚未初始化的bean时，或初始化bean的时候需要注入另一个尚未初始化的依赖时，容器就会调用createBean进行实例化。
+
+   对于**ApplicationContext**容器，当容器启动结束后，通过获取BeanDefinition对象中的信息，实例化所有的bean。
+
+2. **设置对象属性**（依赖注入）：实例化后的对象被封装在**BeanWrapper对象**中，紧接着，Spring根据BeanDefinition中的信息 以及 通过BeanWrapper提供的设置属性的接口完成属性设置与依赖注入。
+
+3. **处理Aware接口**：Spring会检测该对象是否实现了xxAware接口，通过Aware类型的接口，可以让我们拿到Spring容器的一些资源：
+
+   ①如果这个Bean实现了**BeanNameAware**接口，会调用它实现的**setBeanName**(String beanId)方法，传入Bean的名字；
+   ②如果这个Bean实现了**BeanClassLoaderAware**接口，调用**setBeanClassLoader**()方法，传入ClassLoader对象的实例。
+   ②如果这个Bean实现了**BeanFactoryAware**接口，会调用它实现的**setBeanFactory**()方法，传递的是Spring工厂自身。
+   ③如果这个Bean实现了**ApplicationContextAware**接口，会调用**setApplicationContext**(ApplicationContext)方法，传入Spring上下文；
+
+4. **BeanPostProcessor前置处理**：如果想对Bean进行一些自定义的前置处理，那么可以让Bean实现了BeanPostProcessor接口，那将会调用postProcessBeforeInitialization(Object obj, String s)方法。
+
+5. **InitializingBean**：如果Bean实现了InitializingBean接口，执行afeterPropertiesSet()方法。
+
+6. **init-method**：如果Bean在Spring配置文件中配置了 init-method 属性，则会自动调用其配置的初始化方法。
+
+7. **BeanPostProcessor后置处理**：如果这个Bean实现了BeanPostProcessor接口，将会调用postProcessAfterInitialization(Object obj, String s)方法；由于这个方法是在Bean初始化结束时调用的，所以可以被应用于内存或缓存技术；
+
+以上几个步骤完成后，Bean就已经被正确创建了，之后就可以使用这个Bean了。
+
+8. **DisposableBean**：当Bean不再需要时，会经过清理阶段，如果Bean实现了DisposableBean这个接口，会调用其实现的destroy()方法；
+9. **destroy-method**：最后，如果这个Bean的Spring配置中配置了destroy-method属性，会自动调用其配置的销毁方法。
+
+
+
+**作用域：**
+
+（1）**singleton**：默认作用域，单例bean，每个容器中只有一个bean的实例。
+
+（2）**prototype**：为每一个bean请求创建一个实例。
+
+（3）**request**：为每一个request请求创建一个实例，在请求完成以后，bean会失效并被垃圾回收器回收。
+
+（4）**session**：与request范围类似，同一个session会话共享一个实例，不同会话使用不同的实例。
+
+（5）**global-session**：全局作用域，所有会话共享一个实例。如果想要声明让所有会话共享的存储变量的话，那么这全局变量需要存储在global-session中。
 
 #### <span style='color:red'>6）Spring中循环依赖的问题</span>
 
+**原因**是a对象有成员变量b，b对象有成员变量a，实例化a的时候要先实例化b，然后实例b的时候又要实例化a，如此往复……
+
+循环依赖问题在Spring中主要有**三种情况**：
+
+- （1）通过**构造方法进行依赖注入**时产生的循环依赖问题。
+- （2）通过**setter方法进行依赖注入**且是在**多例**（原型）模式下产生的循环依赖问题。
+- （3）通过**setter方法进行依赖注入**且是在**单例**模式下产生的循环依赖问题。
+
+
+
+**在Spring中，只有第（3）种方式的循环依赖问题被解决了**，其他两种方式在遇到循环依赖问题时都会产生异常。其实也很好解释：
+
+- 第（1）种构造方法注入的情况下，在new对象的时候就会堵塞住了，其实也就是”**先有鸡还是先有蛋**“的历史难题。
+- 第（2）种setter方法（多例）的情况下，每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有**无穷无尽的Bean产生**了，最终就会导致OOM问题的出现。
+
+
+
+**通过使用三级缓存解决该问题**
+
+Spring中有三个缓存，用于存储单例的Bean实例，这**三个缓存是彼此互斥**的，不会针对同一个Bean的实例同时存储。如果调用getBean，则需要从三个缓存中依次获取指定的Bean实例。 读取顺序依次是一级缓存 ==> 二级缓存 ==> 三级缓存。
+
+![img](https://img-blog.csdnimg.cn/img_convert/d9f570aa0dce404d7da35ecf42e9ddb5.png)
+
+**singletonObjects**，**一级缓存**，存储的是所有创建好了的单例Bean
+
+**earlySingletonObjects**，**二级缓存**，完成实例化，但是还未进行属性注入及初始化的对象，
+
+**singletonFactories**，**三级缓存**，提前暴露的一个单例工厂，二级缓存中存储的就是从这个工厂中获取到的对象，
+
+**半成品放在三级缓存中**，**从三级缓存转入二级缓存需要判断是否有代理，如果没有直接放，有则放代理对象**
+
+
+
+下图为spring三级缓存解决循环依赖的流程
+
+![img](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5bcb0897632640ffbb4194ba1c449175~tplv-k3u1fbpfcp-watermark.image)
+
+
+
+下图为采用二级缓存解决循环依赖的流程
+
+![img](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3a2677f87c904d29ada221b3fe1ea994~tplv-k3u1fbpfcp-watermark.image)
+
+
+
+不使用三级缓存就需要在实例化后马上创建代理，**违背了Spring在结合AOP跟Bean的生命周期的设计**。
+
+Spring结合**AOP**跟Bean的生命周期本身就是**通过后置处理器来完成的**，在这个后置处理的方法中对初始化后的Bean完成AOP代理。如果出现了循环依赖，那没有办法，只有给Bean先创建代理，但是没有出现循环依赖的情况下，**设计之初就是让Bean在生命周期的最后一步完成代理而不是在实例化后就立马完成代理**。
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**spring容器启动流程**
+
+**BeanFactory和ApplicationContext的区别（BeanFactory延迟注入 ApplicationContext加载注入）**
+
+**事务**
+
 ## 8、Mybatis
+
+#### <span style='color:red'>1）</span>
 
 ## 9、SpringBoot
 
