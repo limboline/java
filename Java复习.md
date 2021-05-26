@@ -1,5 +1,3 @@
-Java复习
-
 ## 1、JavaSE
 
 #### <span style='color:red'>1）HashMap</span>
@@ -1628,6 +1626,8 @@ Redis Cluster的整个数据库将会被分为**16384**个哈希槽，数据库�
 
 **redis性能优化**
 
+**对比memcahce和MongoDB**
+
 ## 7、Spring
 
 #### <span style='color:red'>1）什么是Spring</span>
@@ -1788,9 +1788,90 @@ Spring结合**AOP**跟Bean的生命周期本身就是**通过后置处理器来�
 
 ## 8、Mybatis
 
-#### <span style='color:red'>1）</span>
+#### <span style='color:red'>1）什么是Mybatis</span>
+
+1. Mybatis是一个**半ORM（对象关系映射）框架**，它内部封装了JDBC，加载驱动、创建连接、创建statement等繁杂的过程，开发者开发时**只需要关注如何编写SQL语句**，可以严格控制sql执行性能，灵活度高。
+
+2. 作为一个半ORM框架，MyBatis 可以使用 **XML** 或**注解**来配置和映射原生信息，将 POJO映射成数据库中的记录，避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集。
+
+   <span style='color:red'>称Mybatis是半自动ORM映射工具，是因为在查询关联对象或关联集合对象时，需要手动编写sql来完成。不像Hibernate这种全自动ORM映射工具，Hibernate查询关联对象或者关联集合对象时，可以根据对象关系模型直接获取。</span>
+
+3. 通过xml 文件或注解的方式**将要执行的各种 statement 配置起来**，并通过java对象和 statement中sql的**动态参数**进行映射**生成最终执行的sql语句**，最后**由mybatis框架执行sql**并将结果映射为java对象并返回。（从执行sql到返回result的过程）。
+
+4. 由于MyBatis专注于SQL本身，**灵活度高**，所以比较适合对性能的要求很高，或者**需求变化较多的项目**，如互联网项目。
+
+#### <span style='color:red'>2）mapper.xml，Dao接口</span>
+
+Mapper 接口的工作原理是**JDK动态代理**，Mybatis运行时会使用JDK动态代理为Mapper接口生成代理对象proxy，代理对象会拦截接口方法，根据类的全限定名+方法名，唯一定位到一个MapperStatement并调用执行器执行所代表的sql，然后将sql执行结果返回。
+
+Mapper接口里的方法，是**不能重载**的，因为是使用 全限名+方法名 的保存和寻找策略。
+
+#### <span style='color:red'>3）拦截器</span>
+
+mybatis 拦截器默认可拦截的类型只有四种，即四种接口类型 **Executor（执行器的方法）**、**StatementHandler（sql语法构建的处理）**、**ParameterHandler（参数的处理）**和**ResultSetHandler（结果集的处理）**。
+
+不同拦截器**顺序**：Executor -> ParameterHandler -> StatementHandler -> ResultSetHandler
+
+Mybatis没有任何一个实现拦截器接口的实现类，所以想实现拦截器的功能需要自己写一个实现类。
+
+一共要实现三个方法：
+
+public Object intercept(Invocation invocation)
+
+public Object plugin(Object target)
+
+public` `void` `setProperties(Properties properties)
+
+#### <span style='color:red'>3）分页</span>
+
+|                    |            优点             |                          缺点                           |
+| ------------------ | :-------------------------: | :-----------------------------------------------------: |
+| 全部查出，部分输出 |          方法简单           |                   数据量大时消耗性能                    |
+| sql用limit         |     不需要查询所有数据      | 每次在分页的时候都需要去编写limit语句，很冗余，维护性差 |
+| 拦截器（拼接sql）  | 不需要每次都重新编写sql语句 |                        没啥缺点                         |
+| RowBounds（插件）  |          实现简单           |                        同第一种                         |
+| PageHelper（插件） |          同拦截器           |                        同拦截器                         |
+
+#### <span style='color:red'>4）延迟加载</span>
+
+如果一个对象的成员含有其他对象的集合（表的一对多），当我们对该对象进行查询的时候，首先只查该对象的数据，其他对象的集合（成员）不去查询，当需要该数据的时候再去进行查询，就是延迟加载。
+
+通过xml文件和注解可以得到该查询是否是延迟加载，是延迟加载就创建一个代理对象，当需要查询该代理对象的属性的时候再去数据库中查询加载属性。
+
+#### <span style='color:red'>5）二级缓存</span>
+
+1. 一级缓存: 基于 PerpetualCache 的 HashMap 本地缓存，**其存储作用域为 Session**，当 Session flush 或 close 之后，该 Session 中的所有 Cache 就将清空，**默认打开一级缓存**。
+2. 二级缓存与一级缓存其机制相同，默认也是采用 PerpetualCache，HashMap 存储，不同在于**其存储作用域为 Mapper(Namespace)**，并且可自定义存储源，如 Ehcache。**默认不打开二级缓存**，要开启二级缓存，使用二级缓存属性类需要实现Serializable序列化接口(可用来保存对象的状态),可在它的映射文件中配置；
+3. 对于缓存数据更新机制，当某一个作用域(一级缓存 Session/二级缓存Namespaces)的进行了C/U/D 操作后，默认该作用域下所有 select 中的缓存将被 clear 掉并重新更新。
+
+<span style='color:red'>**问题**：</span>
+
+在二级缓存中，如果**多个mapper文件中都会对同一张表进行操作**，由于二级缓存的机制，在不同mapper下的查询操作会导致数据的不一致。即便对于每一张表的修改操作都写在同一个mapper下，但是多表查询的时候，一定会出现数据不一致的问题。
+
+#### <span style='color:red'>6）MyBatis和Hibernate</span>
+
+|              |                           Mybatis                            |                          Hibernate                           |
+| ------------ | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| 开发速度     |          sql语句需要自己手动去完成，过程计较的复杂           |     sql语句已经被封装 ，是直接就可以使用的，加快系统开发     |
+| sql优化程度  | Mybatis是手动编写sql，能够避免一些不必要的查询，提高系统性能 |  自动的生成sql，有些语句会比较的繁琐，所以，会消耗一些性能   |
+| 对象管理方式 |                  需要自行进行管理，映射关系                  | 它是完整的对象-关系映射的框架，在开发工程当中，只需要去管理对象，对于底层实现不需要进行过多的关注 |
+| 缓存机制     | 二级缓存配置都是在**每个具体的表-对象映射中进行详细配置**。除此之外，Mybatis能够在命名空间中共享相同的缓存配置和实例，通过Cache-ref来实现。 | 二级缓存配置在SessionFactory生成的配置文件中进行详细配置。**之后，再在具体的表-对象映射中配置都是那种缓存**。 |
+
+
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**#{}和${}**
+
+**模糊查询**
+
+**关联查询**
+
+**mapper的编写方式**
 
 ## 9、SpringBoot
+
+
 
 ## 10、分布式
 
