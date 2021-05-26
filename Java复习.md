@@ -1871,13 +1871,69 @@ public` `void` `setProperties(Properties properties)
 
 ## 9、SpringBoot
 
+#### <span style='color:red'>1）简介</span>
 
+Spring Boot是一个**简化Spring开发的框架**。**遵循约定大于配置**的原则，去繁就简。我们在使用Spring Boot时**只需要配置相应的Spring Boot**就可以用所有的Spring组件。**简单的说**，**spring boot就是整合了很多优秀的框架**，不用我们自己手动的去写一堆xml配置然后进行配置。**从本质上来说，Spring Boot就是Spring**,它做了那些没有它你也会去做的Spring Bean配置。
+
+<span style='color:red'>**约定**</span>
+
+1. **Maven的目录结构**。默认有resources文件夹,存放资源配置文件。src-main-resources,src-main-java。默认的编译生成的类都在targe文件夹下面
+2. spring boot默认的配置文件必须是，也只能是**application.命名的yml文件或者properties文件**，且唯一application.yml中默认属性。
+3. 数据库连接信息必须是以spring: datasource: 为前缀；多环境配置。该属性可以根据运行环境自动读取不同的配置文件；端口号、请求路径等
+
+#### <span style='color:red'>2）特点</span>
+
+1. 创建**独立的spring应用**。（之前的Spring必须要依赖tomcat，只是一个整合的作用）
+2. 嵌入**Tomcat**, **Jetty** **Undertow**（都是Servlet容器） 而且不需要部署他们。
+3. 提供的**“starters”** poms来简化Maven配置（spring-boot-starter-parent）
+4. 尽可能自动配置spring应用。
+5. 提供生产指标,健壮检查和外部化配置
+6. 绝对没有代码生成和XML配置要求
+
+#### <span style='color:red'>3）常见注解</span>
+
+#### <span style='color:red'>4）杂七杂八</span>
 
 ## 10、分布式
 
-#### <span style='color:red'>1）一致性</span>
+#### <span style='color:red'>1）CAP</span>
+
+CAP原则又称CAP定理，指的是在一个分布式系统中，**一致性**（Consistency）、**可用性**（Availability）、**分区容错性**（Partition tolerance）。
+
+1. **一致性**（C）：在分布式系统中的所有数据备份，在同一时刻是否同样的值，即写操作之后的读操作，必须返回该值。（分为弱一致性、强一致性和最终一致性）
+2. **可用性**（A）：在集群中一部分节点故障后，集群整体是否还能响应客户端的读写请求。（对数据更新具备高可用性）
+3. **分区容错性**（P）：以实际效果而言，分区相当于对通信的时限要求。系统如果不能在时限内达成数据一致性，就意味着发生了分区的情况，必须就当前操作在C和A之间做出选择。
+
+**CA**（不允许分区，关系型数据库）、**CP**（需要数据强一致，非关系型数据库）、**AP**（需要高可用，抢票）
 
 #### <span style='color:red'>2）雪崩、击穿、穿透</span>
+
+<span style='color:red'>**雪崩**</span>
+
+缓存雪崩是指在我们设置缓存时**采用了相同的过期时间**，导致缓存在某一时刻同时失效，请求全部转发到DB，DB瞬时压力过重雪崩。
+
+**解决方案**
+
+1. 在原有的失效时间基础上**增加一个随机值**，比如1-5分钟随机，这样每一个缓存的过期时间的重复率就会降低，就很难引发集体失效的事件。
+2. **设置一个队列**，限制同一时刻访问数据库的线程
+3. **加互斥锁**，限制同时只能有一个线程访问数据库
+
+<span style='color:red'>**击穿**</span>
+
+极度热点key在失效瞬间，大量请求击穿数据库 
+
+**解决方案**
+
+1. 永不过期（每次访问重置过期时间）
+2. 同雪崩
+
+<span style='color:red'>**穿透**</span>
+
+反复访问数据库不存在的数据
+
+**解决方案**
+
+有很多种方法可以有效地解决缓存穿透问题，最常见的则是采用**布隆过滤器**，将所有可能存在的数据哈希到一个足够大的bitmap中，一个一定不存在的数据会被这个bitmap拦截掉，从而避免了对底层存储系统的查询压力。
 
 ## 11、SpringCloud
 
