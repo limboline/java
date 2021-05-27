@@ -1890,7 +1890,7 @@ Spring Boot是一个**简化Spring开发的框架**。**遵循约定大于配置
 5. 提供生产指标,健壮检查和外部化配置
 6. 绝对没有代码生成和XML配置要求
 
-#### <span style='color:red'>3）常见注解</span>
+#### <span style='color:red'>3）常见注解（代填）</span>
 
 #### <span style='color:red'>4）杂七杂八</span>
 
@@ -1938,6 +1938,66 @@ CAP原则又称CAP定理，指的是在一个分布式系统中，**一致性**�
 ## 11、SpringCloud
 
 ## 12、Zookeeper
+
+#### <span style='color:red'>1）Zookeeper是什么</span>
+
+ZooKeeper 是一个**开源**的**分布式协调服务**。它是一个为分布式应用提供一致性服务的软件，分布式应用程序可以基于 Zookeeper 实现诸如**数据发布/订阅**、**负载均衡**、**命名服务**、**分布式协调/通知**、**集群管理**、**Master 选举**、**分布式锁**和**分布式队列**等功能。
+
+- 顺序性：客户端发起的更新请求会按发送顺序被应用到ZooKeeper上。
+- 原子性：更新操作要么成功要么失败，不会出现中间状态。
+- 可靠性：一个更新操作一旦被接受即不会意外丢失，除非被其他更新操作覆盖。
+- 最终一致性：写操作最终（而非立即）会对客户端可见。
+
+#### <span style='color:red'>2）文件系统</span>
+
+Zookeeper 提供一个多层级的节点命名空间（**节点称为 znode**）。与文件系统不同的是，这些节点都可以设置关联的数据，而文件系统中**只有文件节点可以存放数据**而**目录节点不行**。
+
+Zookeeper 为了保证高吞吐和低延迟，在内存中维护了这个**树状的目录结构**，这种特性使得 Zookeeper 不能用于存放大量的数据，每个节点的存放数据**上限为1M**。
+
+#### <span style='color:red'>3）数据同步</span>
+
+Zookeeper 的核心是**原子广播机制**，这个机制保证了各个 server 之间的同步。实现这个机制的协议叫做 **Zab 协议**。Zab 协议有两种模式，它们分别是**恢复模式**和**广播模式**。
+
+<span style='color:red'>**恢复模式**</span>
+当**服务启动**或者在**领导者崩溃**后，Zab就进入了恢复模式，当领导者被选举出来，且**半数以上**server 完成了和 leader 的状态同步以后，恢复模式就结束了。状态同步保证了 leader 和 server 具有相同的系统状态。
+<span style='color:red'>**广播模式**</span>
+一旦 leader 已经和多数的 follower 进行了状态同步后，它就可以开始广播消息了，即进入广播状态。**这时候当一个 server 加入 ZooKeeper 服务中，它会在恢复模式下启动**，发现 leader，并和 leader 进行状态同步。待到同步结束，它也参与消息广播。ZooKeeper 服务一直维持在 Broadcast 状态，直到 leader 崩溃了或者 leader 失去了大部分的 followers 支持。
+
+**过程**：
+
+1. leader接收到消息请求后，将消息赋予一个全局唯一的64位自增id，叫：zxid，通过zxid的大小比较就可以实现因果有序这个特征。
+2. eader为每个follower准备了一个FIFO队列（通过TCP协议来实现，以实现全局有序这一个特点）将带有zxid的消息作为一个提案（proposal）分发给所有的 follower。
+3. 当follower接收到proposal，先把proposal写到磁盘，写入成功以后再向leader回复一个ack。
+4. 当leader接收到合法数量（超过半数节点）的ack后，leader就会向这些follower发送commit命令，同时会在本地执行该消息。
+5. 当follower收到消息的commit命令以后，会提交该消息。
+
+#### <span style='color:red'>4）四种类型的数据节点 Znode</span>
+
+1. **PERSISTENT-持久节点**
+
+   除非手动删除，否则节点一直存在于 Zookeeper 上
+
+2. **EPHEMERAL-临时节点**
+
+   临时节点的**生命周期与客户端会话绑定**，一旦客户端会话失效（客户端与zookeeper 连接断开不一定会话失效），那么这个客户端创建的所有临时节点都会被移除。
+
+3. **PERSISTENT_SEQUENTIAL-持久顺序节点**
+   基本特性同持久节点，只是增加了顺序属性，节点名后边会追加一个由父节点维护的自增整型数字。
+
+4. **EPHEMERAL_SEQUENTIAL-临时顺序节点**
+   基本特性同临时节点，增加了顺序属性，节点名后边会追加一个由父节点维护的自增整型数字。
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**watcher机制**
+
+**负载均衡**
+
+**分布式锁**
+
+**命名系统**
+
+**队列管理**
 
 ## 13、Dubbo
 
