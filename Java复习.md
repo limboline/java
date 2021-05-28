@@ -1937,6 +1937,79 @@ CAP原则又称CAP定理，指的是在一个分布式系统中，**一致性**�
 
 ## 11、SpringCloud
 
+#### <span style='color:red'>1）SpringCloud是什么</span>
+
+spring cloud 是**一系列框架的有序集合**。它利用 spring boot 的开发便利性巧妙地简化了分布式系统基础设施的开发，如**服务发现注册**、**配置中心**、**消息总线**、**负载均衡**、**断路器**、**数据监控**等，都可以用 spring boot 的开发风格做到一键启动和部署。
+
+#### <span style='color:red'>2）五大组件</span>
+
+- **Eureka**：服务注册于发现。
+- **Feign**：基于动态代理机制，根据注解和选择的机器，拼接请求 url 地址，发起请求。
+- **Ribbon**：实现负载均衡，从一个服务的多台机器中选择一台。
+- **Hystrix**：提供线程池，不同的服务走不同的线程池，实现了不同服务调用的隔离，避免了服务雪崩的问题。
+- **Zuul**：网关管理，由 Zuul 网关转发请求给对应的服务。
+
+#### <span style='color:red'>3）Eureka</span>
+
+![img](https://img-blog.csdnimg.cn/20190427101255808.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3podXlhbmxpbjA5,size_16,color_FFFFFF,t_70)
+
+Eureka的数据存储分了两层：**数据存储层**和**缓存层**。Eureka Client在拉取服务信息时，先从缓存层获取（相当于Redis），如果获取不到，先把数据存储层的数据加载到缓存中（相当于Mysql），再从缓存中获取。**值得注意的是**，**数据存储层**的数据结构是**服务信息**，而**缓存中**保存的是**经过处理加工过的、可以直接传输到Eureka Client的数据结构**。
+
+Eureka这样的数据结构设计是**把内部的数据存储结构与对外的数据结构隔离开**了，就像是我们平时在进行接口设计一样，对外输出的数据结构和数据库中的数据结构往往都是不一样的。
+
+
+
+**服务注册Register**
+
+当eureka提供方（provider）向Eureka Server注册时，它**提供自身的元数据**，例如：ip地址，端口，运行状况指示符等（房东在中介登记房屋信息，比如：面积，价格，地段）
+
+**服务续约Renew**
+
+服务提供方（provider）**每隔30s（默认）**发送一次心跳来续约，通过续约告诉Eureka Server **该服务提供方仍然存在**，没有出现问题，正常情况下，如果Eureka Server在**90s内没有收到服务提供方的续约**，它会将实例从注册中心删除（房东定期告诉中介，我的房子还外租（续约），中介就会保留房屋信息）
+
+**服务剔除Eriction**
+
+在默认情况下，当服务提供方连续90s没有向注册中心进行续约，即心跳，注册中心会将该服务从服务注册列表中剔除（房东定期联系中介告诉他房子还续约，如果中介长时间没有收到房东的续约信息，中介会将他的房屋信息下架）
+
+**获取注册列表信息FetchRegistries**
+
+服务消费方从注册中心获取**注册表信息**，并将其缓存到本地，消费方会使用该信息查找其他服务，从而进行远程调用，该注册列表定期**30S更新一次**，每次返回注册列表信息可能与服务消费方缓存信息不同，服务消费方会自动处理，重新获取整个注册表信息，eureka Server和Eureka Client可以使用JSON/XMl格式进行通信，默认情况下Eureka Client使用Json格式来获取注册列表信息（租客去中介获取所有的房屋信息，而且租客为了获取最新的房屋 信息会定期向中介获取并更新本地列表）
+
+**服务下线Cancel**
+
+**服务提供方在程序关闭时向注册中心发送取消请求**，发送后该服务提供方的信息将从注册中心的服务列表中删除（房东告诉中介房子不租了，中介将此房子的信息删除），该下线请求不会自动完成。
+
+**远程调用Remote Call**
+
+当服务消费方从注册中心获取到服务提供方信息后，就可以**通过Http请求调用对应的服务**；服务提供者有多个时，服务消费方会通过Ribbon自动进行负载均衡
+
+**自我保护机制**
+
+默认情况下，如果注册中心在90秒内没有接受到某个微服务实例的心跳，会注销该实例，**但是在微服务架构下服务之间通常都是跨进程调用**，通信往往会面临这各种问题，比如微服务状态不正常，网络分区故障，导致实例被注销。**大量实例被注销，会威胁到整个微服务架构的可用性**，所以eureka就有了**自我保护机制**，Eureka Server 在运行期间会去**统计心跳失败比例在 15 分钟之内是否低于 85%**，如果低于 85%，Eureka Server 即会进入自我保护机制
+
+**Eureka Server 进入自我保护机制，会出现以下几种情况**：
+
+　　1.Eureka不再从注册列表中移除因为长时间没收到心跳而应该过期的服务
+
+　　2.Eureka仍然能够接受新服务的注册和查询请求，但是不会被同步到其他节点上
+
+　　3.当网络稳定时，当前实例新的注册信息会被同步到其他节点上
+
+Eureka 自我保护机制是为了**防止误杀服务而提供的一个机制**。当个别客户端出现心跳失联时，则认为是客户端的问题，剔除掉客户端；当 Eureka 捕获到大量的心跳失败时，则认为可能是网络问题，进入自我保护机制；当客户端心跳恢复时，Eureka 会自动退出自我保护机制。
+
+如果在保护期内刚好这个服务提供者非正常下线了，此时服务消费者就会拿到一个无效的服务实例，即会调用失败。对于这个问题需要服务消费者端要有一些容错机制，如重试，断路器等。
+
+**Eureka**和**Zookeeper**对比
+
+|          |                   Zookeeper                    |                          Eureka                          |
+| -------- | :--------------------------------------------: | :------------------------------------------------------: |
+| 设计原则 |                       CP                       |                            AP                            |
+| 优点     |                   数据强一致                   |                        服务高可用                        |
+| 缺点     | 网络分区会影响Leader选举，超过阈值后集群不可用 | 服务节点间数据可能不一致，Client-Server间数据可能不一致  |
+| 适用场景 |        单机房集群，对数据一致性要求较高        | 云机房集群，跨越多机房部署，对注册中心服务可用性要求较高 |
+
+#### <span style='color:red'>4）Feign</span>
+
 ## 12、Zookeeper
 
 #### <span style='color:red'>1）Zookeeper是什么</span>
@@ -2000,6 +2073,63 @@ Zookeeper 的核心是**原子广播机制**，这个机制保证了各个 serve
 **队列管理**
 
 ## 13、Dubbo
+
+#### <span style='color:red'>1）Dubbo是什么</span>
+
+Dubbo是阿里巴巴开源的基于 Java 的高性能 RPC 分布式服务框架，现已成为 Apache 基金会孵化项目。
+
+![img](https://img-blog.csdn.net/20181002113850939?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21vYWt1bg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+   
+
+**Provider**: 暴露服务的服务提供方。
+
+**Consumer**: 调用远程服务的服务消费方。
+
+**Registry**: 服务注册与发现的注册中心。
+
+**Monitor**: 统计服务的调用次调和调用时间的监控中心。
+
+**Container**: 服务运行容器。
+
+#### <span style='color:red'>2）Dubbo有哪些协议</span>
+
+- dubbo://（推荐）
+- rmi://
+- hessian://
+- http://
+- webservice://
+- thrift://
+- memcached://
+- redis://
+- rest://
+
+#### <span style='color:red'>3）Dubbo有哪些集群容错方案</span>
+
+![img](https://img-blog.csdn.net/20181002113930188?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21vYWt1bg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+#### <span style='color:red'>4）Dubbo有哪负载均衡策略</span>
+
+![img](https://img-blog.csdn.net/20181002113941952?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L21vYWt1bg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+1. **random loadbalance**：默认情况下，dubbo 是 random load balance ，即随机调用实现负载均衡，可以对 provider 不同实例设置不同的权重，会按照权重来负载均衡，权重越大分配流量越高，一般就用这个默认的就可以了。
+2. **roundrobin loadbalance**：这个的话默认就是均匀地将流量打到各个机器上去，但是如果各个机器的性能不一样，容易导致性能差的机器负载过高。所以此时需要调整权重，让性能差的机器承载权重小一些，流量少一些。
+3. **leastactive loadbalance**：这个就是自动感知一下，如果某个机器性能越差，那么接收的请求越少，越不活跃，此时就会给不活跃的性能差的机器更少的请求
+4. **consistanthash loadbalance**：一致性 Hash 算法，相同参数的请求一定分发到一个 provider 上去，provider 挂掉的时候，会基于虚拟节点均匀分配剩余的流量，抖动不会太大。如果你需要的不是随机负载均衡，是要一类请求都到一个节点，那就走这个一致性 Hash 策略。
+
+#### <span style='color:red'>5）Dubbo和SpringCloud</span>
+
+<img src="https://images2018.cnblogs.com/blog/435188/201804/435188-20180412214125747-2064544666.png" alt="img" style="zoom:60%;" />
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**rpc和rest**
+
+**服务降级（mock）**
+
+**zookeeper宕机**
+
+**直连**
 
 ## 14、rabbitMQ
 
