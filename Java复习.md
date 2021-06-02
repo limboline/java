@@ -1,3 +1,5 @@
+00000
+
 ## 1、JavaSE
 
 #### <span style='color:red'>1）HashMap</span>
