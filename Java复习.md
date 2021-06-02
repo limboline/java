@@ -1,5 +1,3 @@
-00000
-
 ## 1、JavaSE
 
 #### <span style='color:red'>1）HashMap</span>
@@ -2323,6 +2321,8 @@ git pull相当于git fetch+git merge，但是最好用后者，因为使用前�
 **提交之前没有拉取最新代码，报错**
 
 **拉取代码时，未提交当前修改，报错**
+
+**分支**
 
 ## 16、Maven
 
