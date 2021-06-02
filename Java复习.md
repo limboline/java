@@ -2318,9 +2318,87 @@ git pull相当于git fetch+git merge，但是最好用后者，因为使用前�
 
 **指针之间的关系**
 
-提交之前没有拉取最新代码，报错
+**提交之前没有拉取最新代码，报错**
 
-拉取代码时，未提交当前修改，报错
+**拉取代码时，未提交当前修改，报错**
+
+## 16、Maven
+
+#### <span style='color:red'>1）什么是Maven</span>
+
+Maven主要服务于基于java平台的项目构建，依赖管理和项目信息管理。Maven项目对象模型(POM)，可以通过一小段描述信息来管理项目的构建，报告和文档的项目管理工具软件。它包含了一个项目对象模型，一组标准集合，一个项目生命周期，一个依赖管理系统和用来运行定义在生命周期阶段中插件目标的逻辑。当使用Maven的时候，你用一个明确定义的项目对象模型来描述你的项目，然后Maven可以应用横切的逻辑，这些逻辑来自于一组共享的（或自定义的）插件。
+
+#### <span style='color:red'>2）为什么选用 Maven 进行构建</span>
+
+- 首先，Maven 是一个优秀的项目构建工具。使用maven，可以很方便的对项目进行分模块构建，这样在开发和测试打包部署时，效率会提高很多。
+- 其次，Maven 可以进行依赖的管理。使用 Maven ，可以将不同系统的依赖进行统一管理，并且可以进行依赖之间的传递和继承。
+
+#### <span style='color:red'>3）规约</span>
+
+- `/src/main/java/` ：Java 源码。
+- `/src/main/resource` ：Java 配置文件，资源文件。
+- `/src/test/java/` ：Java 测试代码。
+- `/src/test/resource` ：Java 测试配置文件，资源文件。
+- `/target` ：文件编译过程中生成的 `.class` 文件、jar、war 等等。
+- `pom.xml` ：配置文件
+
+Maven 要负责项目的自动化构建，以编译为例，Maven 要想自动进行编译，那么它必须知道 Java 的源文件保存在哪里，这样约定之后，不用我们手动指定位置，Maven 能知道位置，从而帮我们完成自动编译。
+
+遵循**“约定>>>配置>>>编码”**。即能进行配置的不要去编码指定，能事先约定规则的不要去进行配置。这样既减轻了劳动力，也能防止出错。
+
+#### <span style='color:red'>4）常用命令</span>
+
+- `mvn archetype：create` ：创建 Maven 项目。
+- `mvn compile` ：编译源代码。
+- `mvn deploy` ：发布项目。
+- `mvn test-compile` ：编译测试源代码。
+- `mvn test` ：运行应用程序中的单元测试。
+- `mvn site` ：生成项目相关信息的网站。
+- `mvn clean` ：清除项目目录中的生成结果。
+- `mvn package` ：根据项目生成的 jar/war 等。
+- `mvn install` ：在本地 Repository 中安装 jar 。
+- `mvn eclipse:eclipse` ：生成 Eclipse 项目文件。
+- `mvn jetty:run` 启动 Jetty 服务。
+- `mvn tomcat:run` ：启动 Tomcat 服务。
+- `mvn clean package -Dmaven.test.skip=true` ：清除以前的包后重新打包，跳过测试类。
+
+#### <span style='color:red'>5）坐标的含义</span>
+
+- **groupId** ：定义当前 Maven 项目隶属的实际项目。首先，Maven 项目和实际项目不一定是一对一的关系。比如 Spring FrameWork 这一实际项目，其对应的 Maven 项目会有很多，如 `spring-core`、`spring-context` 等。这是由于 Maven 中模块的概念，因此，一个实际项目往往会被划分成很多模块。其次，groupId 不应该对应项目隶属的组织或公司。原因很简单，一个组织下会有很多实际项目，如果 groupId 只定义到组织级别，而后面我们会看到，artifactId 只能定义 Maven 项目(模块)，那么实际项目这个层次将难以定义。最后，groupId 的表示方式与 Java 包名的表达方式类似，通常与域名反向一一对应。上例中，groupId 为 `junit` ，是不是感觉很特殊，这样也是可以的，因为全世界就这么个 junit ，它也没有很多分支。
+
+- **artifactId** ：该元素定义当前实际项目中的一个 Maven 项目(模块)。推荐的做法是使用实际项目名称作为 artifactId 的前缀。比如上例中的 junit ，junit 就是实际的项目名称，方便而且直观。在默认情况下，Maven 生成的构件，会以 artifactId 作为文件头。例如 `junit-3.8.1.jar` ，使用实际项目名称作为前缀，就能方便的从本地仓库找到某个项目的构件。
+
+- **version** ：该元素定义了使用构件的版本。如上例中 junit 的版本是 `4.13-BETA` ，你也可以改为 `4.1.2` 表示使用 `4.1.2` 版本的 junit 。
+
+- **packaging** ：定义 Maven 项目打包的方式，使用构件的什么包。打包方式通常与所生成构件的文件扩展名对应。如上例中没有 `packaging` ，则默认为 jar 包，最终的文件名为`junit-4.13-BETA.jar` 。当然，也可以打包成 war 等。
+
+- **classifier** ：该元素用来帮助定义构建输出的一些附件。附属构件与主构件对应。如上例中的主构件为 `junit-4.13-BETA.jar` ，该项目可能还会通过一些插件生成如 `junit-4.13-BETA-javadoc.jar`、`junit-4.13-BETA-sources.jar`，这样附属构件也就拥有了自己唯一的坐标。
+
+- **scope**：依赖项的适用范围。
+
+  `compile` ：默认值，适用于所有阶段（开发、测试、部署、运行），本 jar 会一直存在所有阶段。
+
+  `provided` ：只在开发、测试阶段使用，目的是不让 Servlet 容器和你本地仓库的 jar 包冲突 。如 `servlet.jar` 。
+
+  `runtime` ：只在运行时使用，如 JDBC 驱动，适用运行和测试阶段。
+
+  `test` ：只在测试时使用，用于编译和运行测试代码，不会随项目发布。
+
+  `system` ：类似 `provided` ，需要显式提供包含依赖的 jar 包，Maven 不会在 Repository 中查找它。
+
+  `import` ：用于一个 `<dependencyManagement />` 对另一个 `<dependencyManagement />` 的继承。非常重要，通过它，可以实现类似 [《Maven Spring BOM (bill of materials)》](https://www.cnblogs.com/YLsY/p/5711103.html) 的功能。
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**maven和Gradle对比**
+
+**依赖机制、依赖原则**
+
+**jar冲突**
+
+**maven插件**
+
+**maven仓库**
 
 ## 17、Docker
 
@@ -2452,6 +2530,8 @@ docker attach是进入容器正在执行的命令行，所以并不需要参数/
 #### <span style='color:red'>23）解释器模式</span>
 
 ## 20、Nginx
+
+
 
 ## 21、Springcloud Alibaba
 
