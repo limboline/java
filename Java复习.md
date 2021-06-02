@@ -2015,10 +2015,6 @@ Eureka 自我保护机制是为了**防止误杀服务而提供的一个机制**
 
 通过在RestTemplate上加@LoadBalance注解实现
 
-负载均衡算法：
-
-
-
 #### <span style='color:red'>5）Feign</span>
 
 Feign是Netflix开发的声明式、模板化的HTTP客户端，其灵感来自Retrofit、JAXRS-2.0以及WebSocket。Feign可帮助我们更加快捷、优雅地调用HTTP API。
@@ -2049,9 +2045,26 @@ SpringCloud 中的 Hystrix 组件就可以解决此类问题，Hystrix 负责监
 
 #### <span style='color:red'>7）Zuul</span>
 
-#### <span style='color:red'>8）Config</span>
+Zuul是Spring Cloud全家桶中的**微服务API网关**。
+
+所有从设备或网站来的请求都会经过Zuul到达后端的Netflix应用程序。作为一个边界性质的应用程序，Zuul提供了**动态路由**、**监控**、**弹性负载**和**安全功能**。Zuul底层利用各种filter实现如下功能：
+
+- **认证和安全** 识别每个需要认证的资源，拒绝不符合要求的请求。
+- **性能监测** 在服务边界追踪并统计数据，提供精确的生产视图。
+- **动态路由** 根据需要将请求动态路由到后端集群。
+- **压力测试** 逐渐增加对集群的流量以了解其性能。
+- **负载卸载** 预先为每种类型的请求分配容量，当请求超过容量时自动丢弃。
+- **静态资源处理** 直接在边界返回某些响应。
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190601012124618.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9mb3JlenAuYmxvZy5jc2RuLm5ldA==,size_16,color_FFFFFF,t_70)
+
+在zuul中， 整个请求的过程是这样的，**首先将请求给zuulservlet处理**，zuulservlet中有一个**zuulRunner对象**，该对象中初始化了**RequestContext**：作为存储整个请求的一些数据，并被所有的zuulfilter共享。zuulRunner中还有 **FilterProcessor**，FilterProcessor作为执行所有的zuulfilter的管理器。FilterProcessor从filterloader 中获取zuulfilter，而zuulfilter是被filterFileManager所加载，并支持groovy热加载，采用了轮询的方式热加载。有了这些filter之后，zuulservelet首先执行的Pre类型的过滤器，再执行route类型的过滤器，最后执行的是post类型的过滤器，如果在执行这些过滤器有错误的时候则会执行error类型的过滤器。执行完这些过滤器，最终将请求的结果返回给客户端。
 
 #### <span style='color:red'>n）杂七杂八</span>
+
+**负载均衡算法**
+
+**Config**
 
 ## 12、Zookeeper
 
@@ -2176,11 +2189,203 @@ Dubbo是阿里巴巴开源的基于 Java 的高性能 RPC 分布式服务框架�
 
 ## 14、rabbitMQ
 
+#### <span style='color:red'>1）什么是RabbitMQ，为什么使用RabbitMQ</span>
+
+RabbitMQ是一款开源的，Erlang编写的，基于AMQP协议的，消息中间件；
+
+可以用它来：**解耦**、**异步**、**削峰**。
+
+AMQP（Advanced Message Queuing Protocol，高级消息队列协议）是一个进程间传递**异步消息**的**网络协议**。
+
+![在这里插入图片描述](https://img-blog.csdn.net/20181022113306601?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzY0MTgzMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+
+#### <span style='color:red'>2）优缺点</span>
+
+优点：**解耦**、**异步**、**削峰**；
+
+缺点：**降低了系统的稳定性**：本来系统运行好好的，现在你非要加入个消息队列进去，那**消息队列挂了**，你的系统不是呵呵了。因此，系统可用性会降低；
+
+**增加了系统的复杂性**：加入了消息队列，要多考虑很多方面的问题，比如：**一致性问题**、**如何保证消息不被重复消费**、**如何保证消息可靠性传输**等。因此，需要考虑的东西更多，复杂性增大。
+
+#### <span style='color:red'>3）如何保证RabbitMQ不被重复消费</span>
+
+**先说为什么会重复消费**：正常情况下，消费者在消费消息的时候，消费完毕后，会发送一个确认消息给消息队列，消息队列就知道该消息被消费了，就会将该消息从消息队列中删除；
+
+但是**因为网络传输等等故障**，确认信息没有传送到消息队列，导致消息队列不知道自己已经消费过该消息了，再次将消息分发给其他的消费者。
+
+针对以上问题，一个解决思路是：**保证消息的唯一性**，就算是多次传输，不要让消息的多次消费带来影响；**保证消息等幂性**；
+
+比如：在写入消息队列的数据做唯一标示，消费消息时，根据唯一标识判断是否消费过；
+
+#### <span style='color:red'>4）如何保证RabbitMQ消息的可靠传输</span>
+
+消息不可靠的情况可能是消息丢失，劫持等原因；丢失又分为：**生产者丢失消息**、**消息列表丢失消息**、**消费者丢失消息**；
+
+**生产者丢失消息**：从生产者弄丢数据这个角度来看，RabbitMQ提供transaction和confirm模式来确保生产者不丢消息；
+
+**transaction机制就**是说：**发送消息前，开启事务**（channel.txSelect()）,然后发送消息，如果发送过程中出现什么异常，事务就会回滚（channel.txRollback()）,如果发送成功则提交事务（channel.txCommit()）。然而，这种方式有个**缺点：吞吐量下降**；
+
+**confirm模式**用的**居多**：一旦channel进入confirm模式，**所有在该信道上发布的消息都将会被指派一个唯一的ID**（从1开始），**一旦消息被投递到所有匹配的队列之后；rabbitMQ就会发送一个ACK给生产者**（包含消息的唯一ID），这就使得生产者知道消息已经正确到达目的队列了；如果rabbitMQ没能处理该消息，则会发送一个Nack消息给你，你可以进行重试操作。
+
+ 
+
+**消息队列丢数据**：**消息持久化**。
+
+处理消息队列丢数据的情况，一般是开启持久化磁盘的配置。
+
+这个持久化配置可以和confirm机制配合使用，你可以在消息持久化磁盘后，再给生产者发送一个Ack信号。
+
+这样，如果消息持久化磁盘之前，rabbitMQ阵亡了，那么生产者收不到Ack信号，生产者会自动重发。
+
+那么如何持久化呢？
+
+这里顺便说一下吧，其实也很容易，就下面两步
+
+1. 将queue的持久化标识durable设置为true,则代表是一个持久的队列
+2. 发送消息的时候将deliveryMode=2
+
+这样设置以后，即使rabbitMQ挂了，重启后也能恢复数据
+
+ 
+
+**消费者丢失消息**：消费者丢数据一般是因为采用了自动确认消息模式，**改为手动确认消息即可**！
+
+消费者在收到消息之后，处理消息之前，会自动回复RabbitMQ已收到消息；
+
+如果这时处理消息失败，就会丢失该消息；
+
+解决方案：处理消息成功后，手动回复确认消息。
+
+#### <span style='color:red'>5）如何保证RabbitMQ消息的顺序性</span>
+
+单线程消费保证消息的顺序性；对消息进行编号，消费者处理消息是根据编号处理消息；
+
+#### <span style='color:red'>6）各种工作模式</span>
+
+1. **简单模式**：一个生产者，一个消费者。
+
+![img](https://bbsmax.ikafan.com/static/L3Byb3h5L2h0dHBzL3d3dy5yYWJiaXRtcS5jb20vaW1nL3R1dG9yaWFscy9weXRob24tb25lLW92ZXJhbGwucG5n.jpg)
+
+2. **work模式**：一个生产者，多个消费者，每个消费者获取到的消息唯一（消费者彼此竞争成为接收者）。
+
+![img](https://bbsmax.ikafan.com/static/L3Byb3h5L2h0dHBzL3d3dy5yYWJiaXRtcS5jb20vaW1nL3R1dG9yaWFscy9weXRob24tdHdvLnBuZw==.jpg)
+
+3. **订阅模式（fanout）**：一个生产者发送的消息会被多个消费者获取。
+
+![fanout](https://raw.githubusercontent.com/limboline/PicBed/master/img/20210531211011.png)
+
+4. **路由模式（direct）**：发送消息到交换机并且要指定路由key ，消费者将队列绑定到交换机时需要指定路由key。
+
+![img](https://bbsmax.ikafan.com/static/L3Byb3h5L2h0dHBzL3d3dy5yYWJiaXRtcS5jb20vaW1nL3R1dG9yaWFscy9kaXJlY3QtZXhjaGFuZ2UucG5n.jpg)
+
+5. **topic模式**：将路由键和某模式进行匹配，此时队列需要绑定在一个模式上，“#”匹配一个词或多个词，“*”只匹配一个词。
+
+![img](https://bbsmax.ikafan.com/static/L3Byb3h5L2h0dHBzL3d3dy5yYWJiaXRtcS5jb20vaW1nL3R1dG9yaWFscy9weXRob24tZml2ZS5wbmc=.jpg)
+
 ## 15、Git
 
-## 16、Maven
+#### <span style='color:red'>1）结构</span>
+
+![img](https://img2018.cnblogs.com/blog/1452443/201908/1452443-20190825154321356-2075865363.png)
+
+**工作区（WORKING DIRECTORY）**: 直接编辑文件的地方，肉眼可见直接操作；
+
+**暂存区（STAGIN AREA）**：数据（快照）暂时存放的地方；
+
+**版本库（GIT DIRECTORT(RESPOSITORY)）：**存放已经提交的数据，push 的时候，就是把这个区的数据 push 到远程git仓库了。
+
+git add就是将**工作区**的修改缓存在**暂存区，**git commit就是将**暂存区**的数据快照提交到**本地库**
+
+#### <span style='color:red'>2）常见指令</span>
+
+git **add** file或者git add .：新增文件的命令
+
+git **commit** –m或者git commit –a：提交文件的命令
+
+git **status** –s：查看工作区状况
+
+git **fetch**/git **merge**或者git **pull**：拉取合并远程分支的操作
+
+git **checkout** **切换分支**（-b 创建并切换分支）或者是**取消当前工作区的修改**，从缓存区**拉取上一个版本**（缓存区没有则从版本库拉取）
+
+git **reset** 回退某一版本
+
+
+
+git pull相当于git fetch+git merge，但是最好用后者，因为使用前者将直接从远程版本库拉取文件覆盖掉本地工作区，无法知道两者区别，如果使用后者可以使用diff查看区别
+
+#### <span style='color:red'>n）杂七杂八</span>
+
+**指针之间的关系**
+
+提交之前没有拉取最新代码，报错
+
+拉取代码时，未提交当前修改，报错
 
 ## 17、Docker
+
+#### <span style='color:red'>1）什么是Docker</span>
+
+Docker是一个容器化平台，它以容器的形式将您的应用程序及其所有依赖项打包在一起，以确保您的应用程序在任何环境中无缝运行。
+
+#### <span style='color:red'>2）Docker和虚拟机</span>
+
+![img](https://blog.fundebug.com/2017/05/31/docker-and-vm/vm.jpg)
+
+- **基础设施(Infrastructure)**。它可以是你的**个人电脑**，数据中心的**服务器**，或者是**云主机**。
+- **主操作系统(Host Operating System)**。你的个人电脑之上，运行的可能是**MacOS**，**Windows**或者某个**Linux**发行版。
+- **虚拟机管理系统(Hypervisor)**。利用Hypervisor，可以在**主操作系统**之上运行多个不同的**从操作系统**。类型1的Hypervisor有支持MacOS的**HyperKit**，支持Windows的**Hyper-V**以及支持Linux的**KVM**。类型2的Hypervisor有VirtualBox和VMWare。
+- **从操作系统(Guest Operating System)**。假设你需要运行3个相互隔离的应用，则需要使用Hypervisor启动3个**从操作系统**，也就是3个**虚拟机**。这些虚拟机都非常大，也许有700MB，这就意味着它们将占用2.1GB的磁盘空间。更糟糕的是，它们还会消耗很多CPU和内存。
+- **各种依赖**。每一个**从操作系统**都需要安装许多依赖。如果你的的应用需要连接PostgreSQL的话，则需要安装**libpq-dev**；如果你使用Ruby的话，应该需要安装gems；如果使用其他编程语言，比如Python或者Node.js，都会需要安装对应的依赖库。
+- **应用**。安装依赖之后，就可以在各个**从操作系统**分别运行应用了，这样各个应用就是相互隔离的。
+
+![img](https://blog.fundebug.com/2017/05/31/docker-and-vm/docker.jpg)
+
+- **基础设施(Infrastructure)**。
+- **主操作系统(Host Operating System)**。所有主流的Linux发行版都可以运行Docker。对于MacOS和Windows，也有一些办法”运行”Docker。
+- **Docker守护进程(Docker Daemon)**。Docker守护进程取代了Hypervisor，它是运行在操作系统之上的后台进程，负责管理Docker容器。
+- **各种依赖**。对于Docker，应用的所有依赖都打包在**Docker镜像**中，**Docker容器**是基于**Docker镜像**创建的。
+- **应用**。应用的源代码与它的依赖都打包在**Docker镜像**中，不同的应用需要不同的**Docker镜像**。不同的应用运行在不同的**Docker容器**中，它们是相互隔离的。
+
+
+
+**Docker守护进程**可以直接与**主操作系统**进行通信，为各个**Docker容器**分配资源；它还可以将容器与**主操作系统**隔离，并将各个容器互相隔离。**虚拟机**启动需要数分钟，而**Docker容器**可以在数毫秒内启动。由于没有臃肿的**从操作系统**，Docker可以节省大量的磁盘空间以及其他系统资源。
+
+<span style='color:red'>**总的来说**</span>，**虚拟机**更擅长于彻底隔离整个运行环境。例如，云服务提供商通常采用虚拟机技术隔离不同的用户。而**Docker**通常用于隔离不同的应用，例如**前端**，**后端**以及**数据库**。
+
+#### <span style='color:red'>3）Docker镜像</span>
+
+Docker镜像是Docker容器的源代码，Docker镜像用于创建容器。使用build命令创建镜像。
+
+#### <span style='color:red'>4）Docker容器</span>
+
+Docker容器包括应用程序及其所有依赖项，作为操作系统的独立进程运行。
+
+Docker容器有四种状态：**运行**、**已暂停**、**重新启动**、**已退出**。
+
+#### <span style='color:red'>5）Dockerfile常用指令</span>
+
+![img](https://img2018.cnblogs.com/blog/22615/201912/22615-20191201204758467-826275333.png)
+
+run是创建镜像的过程中要执行的指令
+
+cmd和entrypoint是执行容器的时候执行的指令
+
+cmd在执行容器的时候加入参数会覆盖，entrypoint不会
+
+#### <span style='color:red'>6）Docker常用指令</span>
+
+![img](https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimage.mamicode.com%2Finfo%2F201809%2F20180930111856338823.png&refer=http%3A%2F%2Fimage.mamicode.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1625121796&t=d6c0b5269de61ad1c163622aaa4a8646)
+
+-it   交互模式
+
+在容器内用ctrl+p+q可以不停止容器推出
+
+docker logs查看日志
+
+docker exec 是进入容器后打开一个新的命令行，所以docker exec需要加/bin/bash，而且进入容器后exit并不会停止该容器
+
+docker attach是进入容器正在执行的命令行，所以并不需要参数/bin/bash
 
 ## 18、数据结构
 
@@ -2245,6 +2450,12 @@ Dubbo是阿里巴巴开源的基于 Java 的高性能 RPC 分布式服务框架�
 #### <span style='color:red'>22）中介者模式</span>
 
 #### <span style='color:red'>23）解释器模式</span>
+
+## 20、Nginx
+
+## 21、Springcloud Alibaba
+
+
 
 
 
