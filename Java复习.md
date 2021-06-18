@@ -819,7 +819,7 @@ public class TestInner {
 
 #### <span style='color:red'>n）杂七杂八的</span>
 
-**Condition**
+**Condition(每一个Condition对应一个队列，调用不同condition的await和signal对不同的队列进行操作)**
 
 **StampedLock**
 
