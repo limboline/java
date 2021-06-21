@@ -817,9 +817,19 @@ public class TestInner {
 1. 使用jps定位进程号：<span style='color:red'>**jps -l**</span>（查看当前或者的进程）
 2. 使用<span style='color:red'>**jstack + 进程号**</span>查看堆栈信息。
 
-#### <span style='color:red'>n）杂七杂八的</span>
+#### <span style='color:red'>20）等待、唤醒、中断</span>
 
-**Condition(每一个Condition对应一个队列，调用不同condition的await和signal对不同的队列进行操作)**
+Object自带wait和notify方法对线程进行等待和唤醒操作，这些操作需要配合synchronized。
+
+与之对应的是Condition的await和signal方法，condition的生成需要通过lock。
+
+区别是condition可以同一个lock生成多个，每一个都维护一个队列，不同的condition操作对应不同的队列，Object原生方法只有一个队列。
+
+中断通过Thread.Interrupt完成，Interrupt只能中断**等待或超时等待状态**的线程，由于**synchronized**争夺锁资源的线程状态是**阻塞状态**，所以不能进行中断，**lock**争夺锁资源的线程状态是**等待状态**，运行状态的线程不能被中断，只能通过获取中断状态实现中断。
+
+锁的获取方法用lockInterruptibly，该方法没有获取到锁的时候会进入等待状态，可以被中断，中断后相当于未获取到锁，所以不需要释放锁。
+
+#### <span style='color:red'>n）杂七杂八的</span>
 
 **StampedLock**
 
