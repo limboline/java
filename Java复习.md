@@ -457,6 +457,14 @@ AIO 是 Java 1.7 之后引入的包，是 NIO 的升级版本，提供了异步�
 
 **同步异步就是有无返回结果，阻塞非阻塞就是是否等到想要的返回结果**
 
+#### <span style='color:red'>16）泛型</span>
+
+<T>定义在类名的后面或者方法返回值的前面；
+
+? extends T 表示该数据类型是T及T的子类；
+
+? super T 表示该数据类型是T及T的父类。
+
 #### <span style='color:red'>n）杂七杂八的</span>
 
 **StringBuffer和StringBuilder**
@@ -2304,7 +2312,11 @@ Spring Boot是一个**简化Spring开发的框架**。**遵循约定大于配置
 5. 提供生产指标,健壮检查和外部化配置
 6. 绝对没有代码生成和XML配置要求
 
-#### <span style='color:red'>3）常见注解（代填）</span>
+#### <span style='color:red'>3）常见注解</span>
+
+1. **configuration**
+2. **bean**
+3. **component**
 
 #### <span style='color:red'>4）杂七杂八</span>
 
@@ -2800,7 +2812,22 @@ Maven 要负责项目的自动化构建，以编译为例，Maven 要想自动�
 
   `system` ：类似 `provided` ，需要显式提供包含依赖的 jar 包，Maven 不会在 Repository 中查找它。
 
-  `import` ：用于一个 `<dependencyManagement />` 对另一个 `<dependencyManagement />` 的继承。非常重要，通过它，可以实现类似 [《Maven Spring BOM (bill of materials)》](https://www.cnblogs.com/YLsY/p/5711103.html) 的功能。
+  `import` ：用于一个 `<dependencyManagement />` 对另一个 `<dependencyManagement />` 的继承。
+
+#### <span style='color:red'>6）父子pom之间的依赖关系</span>
+
+1.如果父pom中是<dependencies></dependencies>时，那么子pom会自动继承父pom依赖，不需要子pom去导入
+
+2.如果父pom中是
+
+<dependencyManagement>
+
+​		<dependencies>....</dependencies>
+
+</dependencyManagement>
+
+则子pom不会自动继承父pom的依赖，除非子pom中声明，声明需要groupId和artifactId，无需给到version
+
 
 #### <span style='color:red'>n）杂七杂八</span>
 
