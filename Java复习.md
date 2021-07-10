@@ -457,6 +457,14 @@ AIO 是 Java 1.7 之后引入的包，是 NIO 的升级版本，提供了异步�
 
 **同步异步就是有无返回结果，阻塞非阻塞就是是否等到想要的返回结果**
 
+#### <span style='color:red'>16）泛型</span>
+
+<T>定义在类名的后面或者方法返回值的前面；
+
+? extends T 表示该数据类型是T及T的子类；
+
+? super T 表示该数据类型是T及T的父类。
+
 #### <span style='color:red'>n）杂七杂八的</span>
 
 **StringBuffer和StringBuilder**
@@ -817,9 +825,19 @@ public class TestInner {
 1. 使用jps定位进程号：<span style='color:red'>**jps -l**</span>（查看当前或者的进程）
 2. 使用<span style='color:red'>**jstack + 进程号**</span>查看堆栈信息。
 
-#### <span style='color:red'>n）杂七杂八的</span>
+#### <span style='color:red'>20）等待、唤醒、中断</span>
 
-**Condition(每一个Condition对应一个队列，调用不同condition的await和signal对不同的队列进行操作)**
+Object自带wait和notify方法对线程进行等待和唤醒操作，这些操作需要配合synchronized。
+
+与之对应的是Condition的await和signal方法，condition的生成需要通过lock。
+
+区别是condition可以同一个lock生成多个，每一个都维护一个队列，不同的condition操作对应不同的队列，Object原生方法只有一个队列。
+
+中断通过Thread.Interrupt完成，Interrupt只能中断**等待或超时等待状态**的线程，由于**synchronized**争夺锁资源的线程状态是**阻塞状态**，所以不能进行中断，**lock**争夺锁资源的线程状态是**等待状态**，运行状态的线程不能被中断，只能通过获取中断状态实现中断。
+
+锁的获取方法用lockInterruptibly，该方法没有获取到锁的时候会进入等待状态，可以被中断，中断后相当于未获取到锁，所以不需要释放锁。
+
+#### <span style='color:red'>n）杂七杂八的</span>
 
 **StampedLock**
 
@@ -2294,7 +2312,11 @@ Spring Boot是一个**简化Spring开发的框架**。**遵循约定大于配置
 5. 提供生产指标,健壮检查和外部化配置
 6. 绝对没有代码生成和XML配置要求
 
-#### <span style='color:red'>3）常见注解（代填）</span>
+#### <span style='color:red'>3）常见注解</span>
+
+1. **configuration**
+2. **bean**
+3. **component**
 
 #### <span style='color:red'>4）杂七杂八</span>
 
@@ -2790,7 +2812,22 @@ Maven 要负责项目的自动化构建，以编译为例，Maven 要想自动�
 
   `system` ：类似 `provided` ，需要显式提供包含依赖的 jar 包，Maven 不会在 Repository 中查找它。
 
-  `import` ：用于一个 `<dependencyManagement />` 对另一个 `<dependencyManagement />` 的继承。非常重要，通过它，可以实现类似 [《Maven Spring BOM (bill of materials)》](https://www.cnblogs.com/YLsY/p/5711103.html) 的功能。
+  `import` ：用于一个 `<dependencyManagement />` 对另一个 `<dependencyManagement />` 的继承。
+
+#### <span style='color:red'>6）父子pom之间的依赖关系</span>
+
+1.如果父pom中是<dependencies></dependencies>时，那么子pom会自动继承父pom依赖，不需要子pom去导入
+
+2.如果父pom中是
+
+<dependencyManagement>
+
+​		<dependencies>....</dependencies>
+
+</dependencyManagement>
+
+则子pom不会自动继承父pom的依赖，除非子pom中声明，声明需要groupId和artifactId，无需给到version
+
 
 #### <span style='color:red'>n）杂七杂八</span>
 
