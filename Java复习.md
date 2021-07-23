@@ -845,6 +845,8 @@ Object自带wait和notify方法对线程进行等待和唤醒操作，这些操�
 
 **threadlocal**
 
+**CompletionService**
+
 ## 3、JVM
 
 #### <span style='color:red'>1）JVM结构框架</span>
@@ -2208,6 +2210,8 @@ Spring结合**AOP**跟Bean的生命周期本身就是**通过后置处理器来�
 
 **事务**
 
+**拦截器、过滤器、监听器**
+
 ## 8、Mybatis
 
 #### <span style='color:red'>1）什么是Mybatis</span>
@@ -2319,6 +2323,10 @@ Spring Boot是一个**简化Spring开发的框架**。**遵循约定大于配置
 3. **component**
 
 #### <span style='color:red'>4）杂七杂八</span>
+
+**component和configuration的区别**
+
+**import导入配置类和普通类的区别**
 
 ## 10、分布式
 
